@@ -1,5 +1,10 @@
 package app.localcart.ui.customer
 
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.animation.animateColorAsState
 import app.localcart.ui.components.ShopThumb
 import app.localcart.ui.components.AwningEdge
 import androidx.compose.ui.unit.sp
@@ -140,8 +145,9 @@ fun ShopDetailScreen(container: AppContainer, shopId: String, nav: Nav) {
             }
             detail != null -> {
                 val shop = detail.shop
+                val listState = rememberLazyListState()
                 Box(Modifier.weight(1f)) {
-                    LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
+                    LazyColumn(state = listState, contentPadding = PaddingValues(bottom = 24.dp)) {
                         item(key = "header") {
                             Column(Modifier.fillMaxWidth().background(Palette.Haldi)) {
                                 AppTopBarOnHaldi(
@@ -223,6 +229,12 @@ fun ShopDetailScreen(container: AppContainer, shopId: String, nav: Nav) {
                             }
                         }
                     }
+                    // Keeps scrolled content out from under the status bar: haldi while the header shows, paper after.
+                    val scrim by animateColorAsState(
+                        if (listState.firstVisibleItemIndex == 0) Palette.Haldi else Palette.Paper,
+                        label = "status-scrim",
+                    )
+                    Box(Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.statusBars).background(scrim))
                 }
                 Column(
                     Modifier.fillMaxWidth().background(Palette.Sheet).navigationBarsPadding()

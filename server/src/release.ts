@@ -3,10 +3,13 @@
  * updates, so publishing a new APK (scripts/upload-apk.ts) only needs this file changed and a deploy.
  */
 export const LATEST_RELEASE = {
-  versionCode: 2,
-  versionName: '1.1.0',
-  apkUrl: 'https://8eiqfkaqqyue5xri.public.blob.vercel-storage.com/localcart/releases/LocalCart-1.1.0.apk',
+  versionCode: 3,
+  versionName: '1.1.1',
+  apkUrl: 'https://8eiqfkaqqyue5xri.public.blob.vercel-storage.com/localcart/releases/LocalCart-1.1.1.apk',
   sizeMb: 25,
   minSdk: 26,
-  notes: 'New look, smoother motion, account deletion, and the move to the new Nexconn app.',
+  notes: 'Chat reconnects by itself when you come back to the app, and a few screens are smoother.',
 } as const;
+
+/** The narrated demo of a full order, on the website and in the README. */
+export const DEMO_VIDEO_URL = 'https://8eiqfkaqqyue5xri.public.blob.vercel-storage.com/localcart/demo/LocalCart-demo-1.1.1.mp4';

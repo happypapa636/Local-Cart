@@ -4,7 +4,7 @@ import { secureHeaders } from 'hono/secure-headers';
 import type { AuthVars } from './lib/auth.js';
 import { errorResponse } from './lib/http.js';
 import { NOT_FOUND_HTML } from './notFoundPage.js';
-import { LATEST_RELEASE } from './release.js';
+import { DEMO_VIDEO_URL, LATEST_RELEASE } from './release.js';
 import { authRoutes } from './routes/auth.js';
 import { catalogRoutes } from './routes/catalog.js';
 import { chatRoutes } from './routes/chat.js';
@@ -34,6 +34,7 @@ app.get('/api/health', (c) => c.json({ ok: true, time: new Date().toISOString() 
 app.get('/api/release', (c) => c.json({ release: LATEST_RELEASE }));
 // A stable link for the latest APK, used by the site and the README.
 app.get('/download', (c) => c.redirect(LATEST_RELEASE.apkUrl, 302));
+app.get('/demo', (c) => c.redirect(DEMO_VIDEO_URL, 302));
 
 app.route('/api', authRoutes);
 app.route('/api', chatRoutes);

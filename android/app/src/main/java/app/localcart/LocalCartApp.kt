@@ -1,6 +1,9 @@
 package app.localcart
 
 import android.app.Application
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import app.localcart.core.AppContainer
 import app.localcart.data.repo.Session
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -14,8 +17,13 @@ class LocalCartApp : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        // Bring chat back when the app returns to the foreground or the network comes back.
+        container.chat.watchNetwork()
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) = container.chat.nudge()
+        })
         // Connect to Nexconn whenever someone is signed in (including after process death),
-        // and disconnect on sign-out. The SDK reconnects by itself after network changes.
+        // and disconnect on sign-out.
         container.appScope.launch {
             container.session.session
                 .map { (it as? Session.SignedIn)?.user?.id }

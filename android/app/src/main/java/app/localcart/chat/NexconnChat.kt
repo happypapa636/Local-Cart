@@ -41,6 +41,9 @@ import ai.nexconn.chat.params.SendMediaMessageParams
 import ai.nexconn.chat.params.SendMessageParams
 import ai.nexconn.chat.channel.query.MessagesQuery
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import android.util.Log
 import app.localcart.BuildConfig
 import app.localcart.data.api.LocalCartApi
@@ -240,6 +243,40 @@ class NexconnChat(
                 _connection.value = ChatConnection.Failed
             }
         }
+    }
+
+    @Volatile private var lastNudge = 0L
+
+    /**
+     * Called when the app comes to the foreground and when the network becomes usable again. Android
+     * freezes background apps, so the socket can come back dead while the SDK sits in a long backoff;
+     * retry now instead of leaving the user on "You're offline". Rate-limited so callbacks can't thrash.
+     */
+    fun nudge() {
+        if (session.currentUser == null) return
+        val now = System.currentTimeMillis()
+        if (now - lastNudge < 15_000) return
+        when (_connection.value) {
+            ChatConnection.Offline, ChatConnection.Failed, ChatConnection.Reconnecting -> {
+                lastNudge = now
+                reconnect()
+            }
+            ChatConnection.Idle -> {
+                lastNudge = now
+                start()
+            }
+            else -> refreshUnread()
+        }
+    }
+
+    /** Nudges the connection whenever the default network is validated (Wi-Fi back, mobile data on). */
+    fun watchNetwork() {
+        val cm = context.getSystemService(ConnectivityManager::class.java) ?: return
+        cm.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
+            override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) {
+                if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) scope.launch { nudge() }
+            }
+        })
     }
 
     /** Retry after a failure or after being signed out by another device. */
