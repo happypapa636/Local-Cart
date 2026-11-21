@@ -254,6 +254,12 @@ h1 .hi { font-size: clamp(1.5rem, 2.8vw, 2.25rem); line-height: 1.25; font-weigh
 .features dd { margin: 4px 0 0; color: rgb(244 246 243 / 0.7); font-size: 1rem; }
 .features code, .anatomy code { font-family: ui-monospace, Consolas, monospace; font-size: 0.875em; color: var(--haldi); }
 
+/* Demo video */
+.demo { padding: clamp(72px, 10vw, 120px) 0 0; }
+.demo-inner { display: grid; grid-template-columns: 1fr 340px; gap: clamp(32px, 6vw, 96px); align-items: center; }
+.demo-link { margin-top: 20px; }
+.demo-video { width: 100%; height: auto; aspect-ratio: 9 / 20; border-radius: 30px; border: 8px solid var(--ink); background: var(--ink); box-shadow: 0 30px 60px -30px rgb(22 33 62 / 0.6); }
+
 /* Screens */
 .screens { padding: clamp(72px, 10vw, 120px) 0 clamp(56px, 8vw, 96px); }
 .screens-strip {
@@ -299,6 +305,8 @@ details[open] p { animation: rise 280ms var(--ease-out); }
   .phone { position: relative; top: 0; width: 320px; height: 600px; }
   .step { min-height: 0; padding: 18px 0; }
   .anatomy { grid-template-columns: 1fr; }
+  .demo-inner { grid-template-columns: 1fr; }
+  .demo-video { max-width: 320px; justify-self: center; }
 }
 @media (max-width: 720px) {
   .nav nav { display: none; }

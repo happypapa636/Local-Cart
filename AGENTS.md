@@ -101,7 +101,7 @@ API when a card is shown, so a missed realtime event can never leave a card wron
 server/
   src/index.ts            Hono app (Vercel entrypoint, framework preset "hono" in vercel.json); / returns
                           public/home.html because the preset routes / to the function
-  src/release.ts          latest APK (version, URL); drives /download and /api/release
+  src/release.ts          latest APK and demo video; drives /download, /demo and /api/release
   public/                 website: home.html, privacy.html, styles.css, site.js, icons, og.png, screens/
   src/dev.ts              local dev server on port 3106
   src/env.ts              validated env (zod)
@@ -152,7 +152,7 @@ android/app/src/test/     JVM unit tests for domain logic and card decoding
 | Feature | Where |
 | --- | --- |
 | SDK init with the Singapore data centre (`AreaCode.SG`), push disabled; App Key fetched from `/api/config` on every start (cached only for offline), cached chat token dropped when the key changes | `android/.../chat/NexconnChat.kt` `initialize()`, `resolveAppKey()` |
-| Connect with a server-issued token; refresh on 31004, 31020 or `TOKEN_INCORRECT`; reconnect; kicked-offline handling | `NexconnChat.connect()`, `refreshTokenAndReconnect()`, `registerHandlers()`; UI in `ui/nav/LocalCartRoot.kt` and the chat connection strip |
+| Connect with a server-issued token; refresh on 31004, 31020 or `TOKEN_INCORRECT`; reconnect, also when the app returns to the foreground or the network is validated again (Android freezes background apps, so the socket can come back dead); kicked-offline handling | `NexconnChat.connect()`, `refreshTokenAndReconnect()`, `nudge()`, `watchNetwork()`, `registerHandlers()`; `LocalCartApp` (foreground); UI in `ui/nav/LocalCartRoot.kt` and the chat connection strip |
 | Connection status handler | `NexconnChat.registerHandlers()` |
 | Direct channel per customer and shop pair | `DirectChannel(peerId)` throughout `NexconnChat.kt` |
 | Text messages with read receipts (`needReceipt`) | `NexconnChat.sendText()` |

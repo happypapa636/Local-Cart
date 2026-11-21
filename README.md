@@ -9,7 +9,9 @@
 
 <p align="center">
   <a href="https://localcart-api.vercel.app">Website</a> ·
-  <a href="https://localcart-api.vercel.app/download">Download the Android app (v1.1.0, 25 MB)</a> ·
+  <a href="https://localcart-api.vercel.app/demo">Watch the demo (5½ min)</a> ·
+  <a href="https://localcart-api.vercel.app/download">Download the Android app (v1.1.1, 25 MB)</a> ·
+  <a href="https://github.com/happypapa636/Local-Cart/releases">Releases</a> ·
   <a href="https://localcart-api.vercel.app/api/health">API status</a> ·
   <a href="https://localcart-api.vercel.app/privacy">Privacy</a>
 </p>
@@ -27,6 +29,14 @@ the same chat moves from Accepted to Packed to Out for delivery to Delivered on 
 
 It's built on **[Nexconn](https://docs.nexconn.ai) Chat**: the Android Chat SDK on the phones, and the
 Platform Chat API on the server, which posts the order cards and moves them along.
+
+## Demo video
+
+**[Watch one order, start to finish](https://localcart-api.vercel.app/demo)** (5½ minutes, narrated). It's
+recorded straight off the phone, against the live backend: a Hinglish list becomes a cart, the shop bills it
+from its own side of the app, and the order card moves to delivered on both sides, with an explanation of
+how Nexconn carries each step. The file is also attached to the
+[v1.1.1 release](https://github.com/happypapa636/Local-Cart/releases/tag/v1.1.1).
 
 ## Screens
 

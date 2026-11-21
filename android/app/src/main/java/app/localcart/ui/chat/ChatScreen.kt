@@ -1,5 +1,9 @@
 package app.localcart.ui.chat
 
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import app.localcart.ui.orders.OrderProgressBar
 import app.localcart.ui.components.shimmer
 import app.localcart.ui.components.pressScale
@@ -337,16 +341,18 @@ private fun ConnectionStrip(connection: ChatConnection, onRetry: () -> Unit) {
         ChatConnection.Connected, ChatConnection.Idle -> return
         ChatConnection.Connecting -> "Connecting to chat" to false
         ChatConnection.Reconnecting -> "Reconnecting" to false
-        ChatConnection.Offline -> "You're offline. Messages send when you reconnect." to false
+        ChatConnection.Offline -> "You're offline. Messages send when you reconnect." to true
         ChatConnection.SignedInElsewhere -> "Chat is open on another phone." to true
         ChatConnection.Failed -> "Chat couldn't connect." to true
     }
+    // Offline is often not our fault, so it stays neutral; failures and "open elsewhere" are alarms.
+    val alarm = retry && connection != ChatConnection.Offline
     Row(
-        Modifier.fillMaxWidth().background(if (retry) Palette.ChilliTint else Palette.InkTint).padding(horizontal = 16.dp, vertical = 6.dp),
+        Modifier.fillMaxWidth().background(if (alarm) Palette.ChilliTint else Palette.InkTint).padding(horizontal = 16.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text, style = MaterialTheme.typography.bodySmall, color = if (retry) Palette.Chilli else Palette.InkMuted, modifier = Modifier.weight(1f))
-        if (retry) Text("Retry", style = MaterialTheme.typography.labelLarge, color = Palette.Chilli, modifier = Modifier.clickable(onClick = onRetry).padding(4.dp))
+        Text(text, style = MaterialTheme.typography.bodySmall, color = if (alarm) Palette.Chilli else Palette.InkMuted, modifier = Modifier.weight(1f))
+        if (retry) Text("Retry", style = MaterialTheme.typography.labelLarge, color = if (alarm) Palette.Chilli else Palette.Ink, modifier = Modifier.clickable(onClick = onRetry).padding(4.dp))
     }
 }
 
@@ -483,10 +489,20 @@ private fun CardFrame(content: @Composable () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Composer(vm: ChatViewModel, draft: String, recording: Boolean, recordSeconds: Int, showMakeCart: Boolean, makingCart: Boolean) {
     val context = LocalContext.current
     var menu by remember { mutableStateOf(false) }
+    // When the user puts the keyboard away, let go of the field too; otherwise Android brings the
+    // keyboard back every time a dialog (accept bill, rate) closes and focus returns to the composer.
+    val focusManager = LocalFocusManager.current
+    val imeVisible = WindowInsets.isImeVisible
+    var imeWasVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(imeVisible) {
+        if (imeWasVisible && !imeVisible) focusManager.clearFocus()
+        imeWasVisible = imeVisible
+    }
     var pendingCapture by rememberSaveable { mutableStateOf<String?>(null) }
     val gallery = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> if (uri != null) vm.sendImage(uri, context) }
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
