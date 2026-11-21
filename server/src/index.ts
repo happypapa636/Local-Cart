@@ -17,7 +17,16 @@ const app = new Hono<{ Variables: AuthVars }>();
 app.use('*', secureHeaders());
 app.use('/api/*', bodyLimit({ maxSize: 4.4 * 1024 * 1024, onError: (c) => c.json({ error: { code: 'too_large', message: 'That upload is too large.' } }, 413) }));
 
-// The landing page, privacy note and icons are static files in public/, served by Vercel's CDN.
+// The landing page, privacy note and icons are static files in public/, served by Vercel's CDN. Vercel's
+// Hono preset sends "/" to this function, so it hands back the static home page, cached at the edge.
+app.get('/', async (c) => {
+  const page = await fetch(new URL('/home', c.req.url), { signal: AbortSignal.timeout(5000) });
+  if (!page.ok) return c.redirect('/home', 302);
+  return c.body(await page.text(), 200, {
+    'content-type': 'text/html; charset=utf-8',
+    'cache-control': 'public, max-age=0, s-maxage=600, stale-while-revalidate=86400',
+  });
+});
 app.get('/api', (c) =>
   c.json({ name: 'LocalCart API', source: 'https://github.com/happypapa636/Local-Cart', health: '/api/health' }),
 );
