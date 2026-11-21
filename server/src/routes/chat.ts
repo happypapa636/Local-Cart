@@ -24,8 +24,9 @@ chatRoutes.get('/config', (c) =>
 chatRoutes.post('/chat/token', requireAuth, async (c) => {
   const user = currentUser(c);
   const body = await readJson(c, z.object({ refresh: z.boolean().optional() }).default({}));
-  if (user.nexconnToken && !body.refresh) {
-    return c.json({ userId: user.nexconnId, token: user.nexconnToken, appKey: env().NEXCONN_APP_KEY });
+  const appKey = env().NEXCONN_APP_KEY;
+  if (user.nexconnToken && user.nexconnTokenAppKey === appKey && !body.refresh) {
+    return c.json({ userId: user.nexconnId, token: user.nexconnToken, appKey });
   }
   await rateLimit(`chat-token:${user.id}`, 20, 3600, 'Too many reconnects. Wait a few minutes and try again.');
   let displayName = user.name;
@@ -44,8 +45,8 @@ chatRoutes.post('/chat/token', requireAuth, async (c) => {
     console.error('token issue failed', err);
     throw new ApiError(502, 'chat_unavailable', 'Chat is unreachable right now. Try again shortly.');
   }
-  await db().update(users).set({ nexconnToken: token }).where(eq(users.id, user.id));
-  return c.json({ userId: user.nexconnId, token, appKey: env().NEXCONN_APP_KEY });
+  await db().update(users).set({ nexconnToken: token, nexconnTokenAppKey: appKey }).where(eq(users.id, user.id));
+  return c.json({ userId: user.nexconnId, token, appKey });
 });
 
 /** Customer opens (or reopens) the direct channel with a shop. */
