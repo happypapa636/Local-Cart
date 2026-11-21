@@ -22,29 +22,35 @@ import androidx.compose.ui.unit.sp
 import app.localcart.R
 
 /*
- * LocalCart design tokens. Four colours only: paper, ink, leaf and chilli.
- * Everything else is a tint of those (alpha over paper), never a new hue.
+ * LocalCart design tokens, taken from a kirana shopfront. Five colours: paper, ink, leaf, chilli and
+ * haldi. Everything else is a tint of those (alpha over paper), never a new hue. Same values as the
+ * website (server/public/styles.css) and the app icon.
  *
  * Paper  — the background, a cool off-white like a ruled notebook page.
  * Ink    — blue-black khata ink for text and strong surfaces.
- * Leaf   — the accent: primary actions, open shops, confirmed states.
- * Chilli — the signal: errors, cancellations, unread counts, closed shops.
+ * Leaf   — dhaniya green: primary actions, open shops, confirmed states.
+ * Chilli — mirchi red: errors, cancellations, unread counts, closed shops.
+ * Haldi  — signboard yellow: the brand surface (headers, selection, the awning), never body text.
  */
 object Palette {
     val Paper = Color(0xFFF4F6F3)
-    val Ink = Color(0xFF17223B)
+    val Ink = Color(0xFF16213E)
     val Leaf = Color(0xFF0E6B4A)
-    val Chilli = Color(0xFFC73E2C)
+    val Chilli = Color(0xFFD2412F)
+    val Haldi = Color(0xFFF6C445)
 
-    // Tints derived from the four colours.
+    // Tints derived from the five colours.
     val Sheet = Color(0xFFFFFFFF) // lightest tint of paper, for raised slips and inputs
     val InkMuted = Ink.copy(alpha = 0.66f)
     val InkFaint = Ink.copy(alpha = 0.45f)
     val Rule = Ink.copy(alpha = 0.12f)
     val RuleStrong = Ink.copy(alpha = 0.22f)
-    val LeafTint = Leaf.copy(alpha = 0.10f)
-    val ChilliTint = Chilli.copy(alpha = 0.10f)
-    val InkTint = Ink.copy(alpha = 0.05f)
+    // Tints are opaque (the colour at low strength over paper), so they stay clean on haldi and white too.
+    val LeafTint = Color(0xFFDDE8E2) // leaf 10% over paper
+    val ChilliTint = Color(0xFFF1E4DF) // chilli 10% over paper
+    val InkTint = Color(0xFFE9EBEA) // ink 5% over paper
+    val HaldiTint = Color(0xFFF5E6BB) // haldi 32% over paper
+    val HaldiDeep = Color(0xFFE3AB22) // haldi in shadow: rules and pressed states on a haldi surface
 }
 
 /*

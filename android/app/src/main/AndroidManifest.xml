@@ -38,7 +38,7 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.LocalCart">
+        android:theme="@style/Theme.LocalCart.Starting">
 
         <activity
             android:name=".MainActivity"

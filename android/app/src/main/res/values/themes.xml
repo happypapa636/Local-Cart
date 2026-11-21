@@ -1,12 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="paper">#FFF4F6F3</color>
-    <color name="ink">#FF17223B</color>
+    <color name="ink">#FF16213E</color>
     <color name="leaf">#FF0E6B4A</color>
+    <color name="haldi">#FFF6C445</color>
+
     <style name="Theme.LocalCart" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/paper</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <!-- Launch screen: the app icon on signboard yellow, then the app theme. -->
+    <style name="Theme.LocalCart.Starting" parent="Theme.SplashScreen.IconBackground">
+        <item name="windowSplashScreenBackground">@color/haldi</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/ink</item>
+        <item name="postSplashScreenTheme">@style/Theme.LocalCart</item>
     </style>
 </resources>

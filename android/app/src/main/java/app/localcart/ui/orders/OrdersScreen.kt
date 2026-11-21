@@ -1,5 +1,14 @@
 package app.localcart.ui.orders
 
+import app.localcart.ui.components.pressScale
+import app.localcart.ui.components.SecondaryButton
+import androidx.compose.runtime.remember
+import androidx.compose.material3.Surface
+import androidx.compose.material.icons.outlined.Replay
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -42,10 +51,8 @@ import app.localcart.domain.Payment
 import app.localcart.ui.components.ChoiceChip
 import app.localcart.ui.components.EmptyState
 import app.localcart.ui.components.ErrorState
-import app.localcart.ui.components.HairlineDivider
 import app.localcart.ui.components.InlineNotice
 import app.localcart.ui.components.LoadingState
-import app.localcart.ui.components.QuietButton
 import app.localcart.ui.components.ScreenHeading
 import app.localcart.ui.components.StatusTag
 import app.localcart.ui.components.Thumb
@@ -119,7 +126,7 @@ fun OrdersScreen(container: AppContainer, nav: Nav) {
 
     Column(Modifier.fillMaxSize()) {
         ScreenHeading(title = "Orders")
-        Row(Modifier.padding(horizontal = 20.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(Modifier.padding(horizontal = 20.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ChoiceChip("Active", selected = state.scope == "active", onClick = { vm.setScope("active") })
             ChoiceChip("Past", selected = state.scope == "past", onClick = { vm.setScope("past") })
         }
@@ -141,10 +148,15 @@ fun OrdersScreen(container: AppContainer, nav: Nav) {
                         )
                     }
                 }
-                else -> LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
+                else -> LazyColumn(
+                    Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
                     items(state.orders, key = { it.id }) { order ->
                         OrderRow(
-                            order,
+                            order = order,
+                            modifier = Modifier.animateItem(),
                             isShop = isShop,
                             onClick = { nav.order(order.id) },
                             reordering = busy == "reorder-${order.id}",
@@ -152,7 +164,6 @@ fun OrdersScreen(container: AppContainer, nav: Nav) {
                                 { vm.reorder(order.id) { peer -> nav.chat(peer) } }
                             } else null,
                         )
-                        HairlineDivider(Modifier.padding(start = 84.dp))
                     }
                 }
             }
@@ -167,25 +178,54 @@ fun formatTimestamp(iso: String): String = runCatching {
 }.getOrDefault("")
 
 @Composable
-private fun OrderRow(order: OrderSummaryDto, isShop: Boolean, onClick: () -> Unit, reordering: Boolean, onReorder: (() -> Unit)?) {
-    Row(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.Top) {
-        Thumb(if (isShop) null else order.shop.photoUrl, if (isShop) order.customer.name else order.shop.name, size = 48.dp, round = isShop)
-        Spacer(Modifier.width(16.dp))
-        Column(Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(if (isShop) order.customer.name else order.shop.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                Text(Money.format(order.totalPaise), style = LocalFigures.current.medium)
-            }
-            Text("#${order.code}, ${order.itemCount} items, ${formatTimestamp(order.createdAt)}", style = MaterialTheme.typography.bodySmall)
-            Spacer(Modifier.height(6.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                StatusTag(OrderStatus.label(order.status), statusTone(order.status))
-                if (order.paymentMethod != null && order.status != OrderStatus.CANCELLED) {
-                    Text(Payment.label(order.paymentMethod, order.paymentStatus), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+private fun OrderRow(
+    order: OrderSummaryDto,
+    isShop: Boolean,
+    onClick: () -> Unit,
+    reordering: Boolean,
+    onReorder: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    val interaction = remember { MutableInteractionSource() }
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = Palette.Sheet,
+        border = BorderStroke(1.dp, Palette.Rule),
+        modifier = modifier.fillMaxWidth().pressScale(interaction, 0.985f)
+            .clickable(interactionSource = interaction, indication = LocalIndication.current, onClick = onClick),
+    ) {
+        Column(Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.Top) {
+                Thumb(if (isShop) null else order.shop.photoUrl, if (isShop) order.customer.name else order.shop.name, size = 48.dp, round = isShop)
+                Spacer(Modifier.width(14.dp))
+                Column(Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(if (isShop) order.customer.name else order.shop.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                        Text(Money.format(order.totalPaise), style = LocalFigures.current.medium)
+                    }
+                    Text("#${order.code}, ${order.itemCount} ${if (order.itemCount == 1) "item" else "items"}, ${formatTimestamp(order.createdAt)}", style = MaterialTheme.typography.bodySmall)
+                    Spacer(Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        StatusTag(OrderStatus.label(order.status), statusTone(order.status))
+                        if (order.paymentMethod != null && order.status != OrderStatus.CANCELLED) {
+                            Text(Payment.label(order.paymentMethod, order.paymentStatus), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
                 }
             }
+            if (order.status != OrderStatus.DRAFT) {
+                Spacer(Modifier.height(12.dp))
+                OrderProgressBar(order.status)
+            }
             if (onReorder != null) {
-                QuietButton(if (reordering) "Creating cart" else "Reorder", onClick = onReorder, enabled = !reordering)
+                Spacer(Modifier.height(8.dp))
+                SecondaryButton(
+                    if (reordering) "Making the cart" else "Reorder at today's prices",
+                    onClick = onReorder,
+                    enabled = !reordering,
+                    icon = Icons.Outlined.Replay,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
     }

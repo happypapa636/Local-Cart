@@ -1,5 +1,7 @@
 package app.localcart.ui.chat
 
+import app.localcart.ui.components.ShopThumb
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -118,11 +120,14 @@ fun ChatListScreen(container: AppContainer, nav: Nav) {
                 else -> LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
                     items(state.conversations, key = { it.peerId }) { convo ->
                         val peer = peers[convo.peerId]
+                        Column(Modifier.animateItem()) {
                         Row(
-                            Modifier.fillMaxWidth().clickable { nav.chat(convo.peerId) }.padding(horizontal = 20.dp, vertical = 12.dp),
+                            Modifier.fillMaxWidth().background(if (convo.unread > 0) Palette.HaldiTint.copy(alpha = 0.18f) else Palette.Paper)
+                                .clickable { nav.chat(convo.peerId) }.padding(horizontal = 20.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Thumb(peer?.photoUrl, peer?.name ?: "?", size = 48.dp, round = peer?.kind == "customer")
+                            if (peer?.kind == "shop") ShopThumb(peer.photoUrl, null, size = 50.dp)
+                            else Thumb(peer?.photoUrl, peer?.name ?: "?", size = 50.dp, round = true)
                             Spacer(Modifier.width(14.dp))
                             Column(Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -149,7 +154,8 @@ fun ChatListScreen(container: AppContainer, nav: Nav) {
                                 }
                             }
                         }
-                        HairlineDivider(Modifier.padding(start = 82.dp))
+                        HairlineDivider(Modifier.padding(start = 84.dp))
+                        }
                     }
                 }
             }

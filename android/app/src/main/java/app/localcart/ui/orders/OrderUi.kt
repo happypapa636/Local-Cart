@@ -1,5 +1,15 @@
 package app.localcart.ui.orders
 
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.animateColorAsState
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -124,24 +134,48 @@ fun copyToClipboard(context: Context, label: String, text: String) {
 fun StatusTrack(status: String, modifier: Modifier = Modifier) {
     val steps = OrderStatus.fulfilment
     val current = steps.indexOf(status)
+    // The step in progress breathes, so a glance shows the order is moving; it stops once delivered.
+    val pulse by rememberInfiniteTransition(label = "track").animateFloat(
+        initialValue = 1f,
+        targetValue = 1.45f,
+        animationSpec = infiniteRepeatable(tween(950, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "track-pulse",
+    )
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         steps.forEachIndexed { index, step ->
             val done = current >= 0 && index < current
             val active = index == current
+            val reached = done || active
+            val dot by animateColorAsState(if (reached) Palette.Leaf else Palette.Sheet, tween(450), label = "dot")
+            val ring by animateColorAsState(if (reached) Palette.Leaf else Palette.RuleStrong, tween(450), label = "ring")
+            val left by animateColorAsState(if (index == 0) Color.Transparent else if (reached) Palette.Leaf else Palette.Rule, tween(550), label = "left")
+            val right by animateColorAsState(if (index == steps.lastIndex) Color.Transparent else if (done) Palette.Leaf else Palette.Rule, tween(550), label = "right")
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.weight(1f).height(2.dp).background(if (index == 0) Palette.Sheet else if (done || active) Palette.Leaf else Palette.Rule))
-                    Box(
-                        Modifier.size(24.dp).clip(CircleShape)
-                            .background(if (active || done) Palette.Leaf else Palette.Sheet)
-                            .border(1.dp, if (active || done) Palette.Leaf else Palette.RuleStrong, CircleShape)
-                            .semantics { contentDescription = "${OrderStatus.label(step)}${if (done) ", done" else if (active) ", current" else ""}" },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        if (done) Icon(Icons.Outlined.Check, contentDescription = null, tint = Palette.Paper, modifier = Modifier.size(14.dp))
-                        else Text("${index + 1}", style = MaterialTheme.typography.labelSmall, color = if (active) Palette.Paper else Palette.InkMuted)
+                    Box(Modifier.weight(1f).height(2.dp).background(left))
+                    Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) {
+                        if (active && step != OrderStatus.DELIVERED) {
+                            Box(
+                                Modifier.size(24.dp).graphicsLayer {
+                                    scaleX = pulse
+                                    scaleY = pulse
+                                    alpha = 1.6f - pulse
+                                }.clip(CircleShape).background(Palette.Leaf.copy(alpha = 0.28f)),
+                            )
+                        }
+                        Box(
+                            Modifier.size(24.dp).clip(CircleShape).background(dot).border(1.dp, ring, CircleShape)
+                                .semantics { contentDescription = "${OrderStatus.label(step)}${if (done) ", done" else if (active) ", current" else ""}" },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (done || (active && step == OrderStatus.DELIVERED)) {
+                                Icon(Icons.Outlined.Check, contentDescription = null, tint = Palette.Paper, modifier = Modifier.size(14.dp))
+                            } else {
+                                Text("${index + 1}", style = MaterialTheme.typography.labelSmall, color = if (active) Palette.Paper else Palette.InkMuted)
+                            }
+                        }
                     }
-                    Box(Modifier.weight(1f).height(2.dp).background(if (index == steps.lastIndex) Palette.Sheet else if (done) Palette.Leaf else Palette.Rule))
+                    Box(Modifier.weight(1f).height(2.dp).background(right))
                 }
                 Spacer(Modifier.height(4.dp))
                 Text(
@@ -151,6 +185,30 @@ fun StatusTrack(status: String, modifier: Modifier = Modifier) {
                     textAlign = TextAlign.Center,
                 )
             }
+        }
+    }
+}
+
+/**
+ * Compact progress for lists: one segment per step from cart to doorstep, filled up to the current
+ * one. Cancelled orders show a single red bar instead.
+ */
+@Composable
+fun OrderProgressBar(status: String, modifier: Modifier = Modifier) {
+    val steps = listOf(OrderStatus.PLACED, OrderStatus.BILLED, OrderStatus.ACCEPTED, OrderStatus.PACKED, OrderStatus.OUT_FOR_DELIVERY, OrderStatus.DELIVERED)
+    val current = steps.indexOf(status)
+    Row(modifier.fillMaxWidth().height(4.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+        steps.forEachIndexed { index, _ ->
+            val color by animateColorAsState(
+                when {
+                    status == OrderStatus.CANCELLED -> Palette.Chilli.copy(alpha = 0.55f)
+                    index <= current -> Palette.Leaf
+                    else -> Palette.Rule
+                },
+                tween(500, delayMillis = index * 60),
+                label = "segment",
+            )
+            Box(Modifier.weight(1f).fillMaxHeight().clip(CircleShape).background(color))
         }
     }
 }

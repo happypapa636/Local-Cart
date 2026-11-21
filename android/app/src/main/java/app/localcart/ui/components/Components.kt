@@ -1,6 +1,14 @@
 package app.localcart.ui.components
 
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -74,10 +82,12 @@ fun PrimaryButton(
     icon: ImageVector? = null,
     destructive: Boolean = false,
 ) {
+    val interaction = remember { MutableInteractionSource() }
     Button(
         onClick = onClick,
         enabled = enabled && !loading,
-        modifier = modifier.heightIn(min = 50.dp),
+        interactionSource = interaction,
+        modifier = modifier.heightIn(min = 52.dp).pressScale(interaction),
         shape = MaterialTheme.shapes.medium,
         colors = ButtonDefaults.buttonColors(
             containerColor = if (destructive) Palette.Chilli else Palette.Leaf,
@@ -88,7 +98,7 @@ fun PrimaryButton(
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
     ) {
         if (loading) {
-            CircularProgressIndicator(Modifier.size(18.dp), color = Palette.Paper, strokeWidth = 2.dp)
+            CircularProgressIndicator(Modifier.size(18.dp), color = LocalContentColor.current, strokeWidth = 2.dp)
             Spacer(Modifier.width(10.dp))
         } else if (icon != null) {
             Icon(icon, contentDescription = null, modifier = Modifier.size(19.dp))
@@ -107,10 +117,12 @@ fun SecondaryButton(
     icon: ImageVector? = null,
     color: Color = Palette.Ink,
 ) {
+    val interaction = remember { MutableInteractionSource() }
     OutlinedButton(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.heightIn(min = 48.dp),
+        interactionSource = interaction,
+        modifier = modifier.heightIn(min = 48.dp).pressScale(interaction),
         shape = MaterialTheme.shapes.medium,
         border = BorderStroke(1.dp, if (enabled) color.copy(alpha = 0.28f) else Palette.Rule),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = color, disabledContentColor = Palette.InkFaint),
@@ -204,7 +216,8 @@ fun AppTopBar(
 /** Large left-aligned screen heading used on tab roots. */
 @Composable
 fun ScreenHeading(title: String, modifier: Modifier = Modifier, subtitle: String? = null, trailing: @Composable () -> Unit = {}) {
-    Row(modifier.fillMaxWidth().padding(start = 20.dp, end = 12.dp, top = 12.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+    // Tab roots draw edge to edge, so the heading keeps itself clear of the status bar.
+    Row(modifier.fillMaxWidth().statusBarsPadding().padding(start = 20.dp, end = 12.dp, top = 12.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
             if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -238,8 +251,8 @@ fun EmptyState(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (icon != null) {
-            Box(Modifier.size(56.dp).clip(CircleShape).background(Palette.LeafTint), contentAlignment = Alignment.Center) {
-                Icon(icon, contentDescription = null, tint = Palette.Leaf, modifier = Modifier.size(26.dp))
+            Box(Modifier.size(64.dp).clip(RoundedCornerShape(20.dp)).background(Palette.HaldiTint), contentAlignment = Alignment.Center) {
+                Icon(icon, contentDescription = null, tint = Palette.Ink, modifier = Modifier.size(28.dp))
             }
             Spacer(Modifier.height(16.dp))
         }
@@ -268,15 +281,13 @@ fun ErrorState(message: String, onRetry: () -> Unit, modifier: Modifier = Modifi
 
 @Composable
 fun LoadingState(modifier: Modifier = Modifier, label: String = "Loading") {
-    Box(modifier.fillMaxWidth().padding(48.dp).semantics { contentDescription = label }, contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(color = Palette.Leaf, strokeWidth = 2.5.dp, modifier = Modifier.size(28.dp))
-    }
+    SkeletonList(modifier, label = label)
 }
 
 @Composable
 fun FullScreenLoading() {
     Box(Modifier.fillMaxSize().background(Palette.Paper), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator(color = Palette.Leaf, strokeWidth = 2.5.dp)
+        BrandMark(size = 56.dp, modifier = Modifier.shimmer())
     }
 }
 
@@ -300,12 +311,21 @@ fun InlineNotice(text: String, modifier: Modifier = Modifier, isError: Boolean =
     }
 }
 
+/** Letter tiles take one of the palette tints, picked from the name, so a list isn't a column of grey. */
+private val letterTints = listOf(
+    Palette.HaldiTint to Palette.Ink,
+    Palette.LeafTint to Palette.Leaf,
+    Palette.ChilliTint to Palette.Chilli,
+    Palette.InkTint to Palette.Ink,
+)
+
 /** Square photo, or the first letter of the name in a tinted tile when there is no photo. */
 @Composable
 fun Thumb(url: String?, name: String, modifier: Modifier = Modifier, size: Dp = 48.dp, round: Boolean = false) {
-    val shape = if (round) CircleShape else RoundedCornerShape(8.dp)
+    val shape = if (round) CircleShape else RoundedCornerShape(size * 0.24f)
+    val (tint, letter) = letterTints[Math.floorMod(name.trim().lowercase().hashCode(), letterTints.size)]
     Box(
-        modifier.size(size).clip(shape).background(Palette.InkTint).border(1.dp, Palette.Rule, shape),
+        modifier.size(size).clip(shape).background(if (url != null) Palette.InkTint else tint).border(1.dp, Palette.Rule, shape),
         contentAlignment = Alignment.Center,
     ) {
         if (url != null) {
@@ -314,7 +334,7 @@ fun Thumb(url: String?, name: String, modifier: Modifier = Modifier, size: Dp = 
             Text(
                 name.trim().firstOrNull()?.uppercase() ?: "?",
                 style = MaterialTheme.typography.titleMedium.copy(fontFamily = AnekDisplay, fontSize = (size.value * 0.42f).sp),
-                color = Palette.Ink.copy(alpha = 0.55f),
+                color = letter.copy(alpha = 0.8f),
             )
         }
     }
@@ -343,12 +363,16 @@ fun StatusTag(text: String, tone: Tone, modifier: Modifier = Modifier) {
         Tone.Negative -> Palette.ChilliTint to Palette.Chilli
         Tone.Strong -> Palette.Ink to Palette.Paper
     }
-    Text(
-        text,
-        style = MaterialTheme.typography.labelMedium,
-        color = fg,
-        modifier = modifier.clip(RoundedCornerShape(4.dp)).background(bg).padding(horizontal = 7.dp, vertical = 3.dp),
-    )
+    Row(
+        modifier.clip(CircleShape).background(bg).padding(start = if (tone == Tone.Positive) 8.dp else 9.dp, end = 9.dp, top = 3.dp, bottom = 3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (tone == Tone.Positive) {
+            Box(Modifier.size(6.dp).clip(CircleShape).background(fg))
+            Spacer(Modifier.width(5.dp))
+        }
+        Text(text, style = MaterialTheme.typography.labelMedium, color = fg, maxLines = 1)
+    }
 }
 
 /** Dashed rule, like the tear line above the total on a printed bill. */
@@ -384,19 +408,25 @@ fun Sheet(modifier: Modifier = Modifier, padding: PaddingValues = PaddingValues(
 }
 
 @Composable
-fun ChoiceChip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val shape = RoundedCornerShape(6.dp)
-    Text(
-        text,
-        style = MaterialTheme.typography.labelLarge,
-        color = if (selected) Palette.Paper else Palette.Ink,
-        modifier = modifier
+fun ChoiceChip(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, icon: ImageVector? = null) {
+    val shape = CircleShape
+    val bg by animateColorAsState(if (selected) Palette.Ink else Palette.Sheet, label = "chip-bg")
+    val fg by animateColorAsState(if (selected) Palette.Paper else Palette.Ink, label = "chip-fg")
+    Row(
+        modifier
             .clip(shape)
-            .background(if (selected) Palette.Ink else Palette.Sheet)
+            .background(bg)
             .border(1.dp, if (selected) Palette.Ink else Palette.RuleStrong, shape)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-    )
+            .selectable(selected = selected, onClick = onClick, role = Role.Tab)
+            .padding(start = if (icon != null) 10.dp else 14.dp, end = 14.dp, top = 8.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (icon != null) {
+            Icon(icon, contentDescription = null, tint = if (selected) Palette.Haldi else fg, modifier = Modifier.size(17.dp))
+            Spacer(Modifier.width(6.dp))
+        }
+        Text(text, style = MaterialTheme.typography.labelLarge, color = fg)
+    }
 }
 
 @Composable
