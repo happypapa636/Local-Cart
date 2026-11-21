@@ -235,15 +235,4 @@ localcart-release.jks -alias localcart -keyalg RSA -keysize 2048 -validity 10000
 `storePassword`, `keyAlias` and `keyPassword` in `android/keystore.properties` (gitignored). Updates must
 be signed with the same key.
 
-## Limitations
-
-- **No push after the app is closed.** The shared Nexconn console has no FCM credentials. Messages alert in
-  real time while LocalCart is open or in the background; nothing arrives after the process is killed
-  until the app reopens.
-- **UPI confirmation is manual.** The customer marks the order paid and the shop confirms. There's no
-  payment gateway, so LocalCart never handles money.
-- **Chat history is per device.** It comes from the SDK's local database; after a reinstall, older messages
-  aren't re-downloaded. Orders and their state always load from the server.
-- **One phone per account at a time** (Nexconn default). A second sign-in shows "open on another phone".
-
 Contributor notes, the folder map and conventions are in [AGENTS.md](AGENTS.md).
