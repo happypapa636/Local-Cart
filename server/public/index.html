@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LocalCart: order from the shop on your street, by chat</title>
+  <meta name="description" content="Type or say your list in Hindi or English. LocalCart turns it into a cart from your neighbourhood shop's catalog, the shop sends a bill in one tap, and a live card tracks the order to your door.">
+  <link rel="canonical" href="https://localcart-api.vercel.app/">
+  <meta name="theme-color" content="#F6C445">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="LocalCart">
+  <meta property="og:title" content="LocalCart: order from the shop on your street, by chat">
+  <meta property="og:description" content="Your kirana list, typed or spoken, becomes a cart, a bill and a live order card. Built on Nexconn Chat.">
+  <meta property="og:url" content="https://localcart-api.vercel.app/">
+  <meta property="og:image" content="https://localcart-api.vercel.app/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Devanagari:wdth,wght@75..125,300..800&display=swap">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/site.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="nav" data-nav>
+    <div class="nav-inner">
+      <a class="brand" href="/" aria-label="LocalCart home">
+        <img src="/favicon.svg" alt="" width="36" height="36">
+        <span>LocalCart</span>
+      </a>
+      <nav aria-label="Main">
+        <a href="#how">How it works</a>
+        <a href="#shops">For shops</a>
+        <a href="#nexconn">Nexconn</a>
+      </nav>
+      <a class="btn btn-ink btn-small" href="/download">Get the app</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <h1 id="hero-title">
+            <span class="en">Order from the shop on your street, by chat.</span>
+            <span class="hi" lang="hi">अपनी गली की दुकान से, चैट पर।</span>
+          </h1>
+          <p class="lede">Type or say your list in Hindi or English. LocalCart turns it into a cart from that shop’s own catalog, the shop sends a bill in one tap, and a live card follows the order to your door.</p>
+          <div class="hero-actions">
+            <a class="btn btn-ink" href="/download">
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1ZM5 19h14a1 1 0 1 1 0 2H5a1 1 0 1 1 0-2Z"/></svg>
+              Download for Android
+            </a>
+            <a class="link-quiet" href="#how">See how an order works</a>
+          </div>
+          <p class="fineprint">Free APK for Android 8 and newer, about 25 MB.</p>
+        </div>
+
+        <div class="hero-scene" aria-label="A chat message turning into a bill">
+          <div class="msg msg-me hero-msg">
+            <p>bhaiya 2 kilo pyaaz, 1 litre Amul Taaza, 6 ande aur ek Parle-G bhej do</p>
+            <span class="msg-meta">7:42 pm</span>
+          </div>
+          <article class="slip hero-slip" aria-label="Bill from Gupta General Store">
+            <header class="slip-head">
+              <strong>Gupta General Store</strong>
+              <span>Bill #K7Q4MX</span>
+            </header>
+            <ol class="slip-lines">
+              <li style="--i:0"><span>Onion (Pyaaz)<small>2 kg at ₹40</small></span><b>₹80</b></li>
+              <li style="--i:1"><span>Amul Taaza 500 ml<small>2 packs at ₹28</small></span><b>₹56</b></li>
+              <li style="--i:2"><span>Eggs<small>6 at ₹7</small></span><b>₹42</b></li>
+              <li style="--i:3"><span>Parle-G<small>1 pack at ₹10</small></span><b>₹10</b></li>
+              <li style="--i:4" class="slip-fee"><span>Delivery</span><b>₹15</b></li>
+            </ol>
+            <footer class="slip-total"><span>Total</span><b>₹203</b></footer>
+            <div class="stamp" aria-label="Paid by UPI">Paid by UPI</div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="how" id="how" aria-labelledby="how-title">
+      <div class="wrap">
+        <h2 id="how-title">One chat, from list to doorstep</h2>
+        <p class="section-lede">The shop stays the shop. The chat stays a chat. LocalCart adds the structure in between: a cart, a bill and an order card that both phones see change at the same moment.</p>
+      </div>
+
+      <div class="how-grid wrap">
+        <ol class="steps" data-steps>
+          <li class="step" data-step="1">
+            <button type="button" class="step-tab" aria-controls="demo-phone">
+              <span class="step-n">1</span>
+              <span class="step-title">Send your list the way you’d text the shop</span>
+            </button>
+            <p>Type it, or hold the mic and say it. Hindi, English, or both in one sentence: “2 kilo pyaaz, 1 kg tamatar aur 1 litre doodh.”</p>
+          </li>
+          <li class="step" data-step="2">
+            <button type="button" class="step-tab" aria-controls="demo-phone">
+              <span class="step-n">2</span>
+              <span class="step-title">Tap Make cart</span>
+            </button>
+            <p>AI reads the message or voice note and matches each item to this shop’s catalog, in the right unit and at the shop’s price. Anything it can’t match stays on the cart for the shop to price.</p>
+          </li>
+          <li class="step" data-step="3">
+            <button type="button" class="step-tab" aria-controls="demo-phone">
+              <span class="step-n">3</span>
+              <span class="step-title">The shop sends a bill</span>
+            </button>
+            <p>The shopkeeper ticks what’s in stock, fixes a price or a quantity, adds a delivery fee and sends the bill back into the same chat.</p>
+          </li>
+          <li class="step" data-step="4">
+            <button type="button" class="step-tab" aria-controls="demo-phone">
+              <span class="step-n">4</span>
+              <span class="step-title">Pay and watch it come</span>
+            </button>
+            <p>Choose cash on delivery or UPI. The order card moves from Packed to Out for delivery to Delivered on both phones, without anyone sending a new message.</p>
+          </li>
+        </ol>
+
+        <div class="phone-rail">
+          <div class="phone" id="demo-phone" data-phone data-step="1" aria-live="polite">
+            <div class="phone-screen">
+              <div class="phone-bar">
+                <span class="phone-avatar" aria-hidden="true">S</span>
+                <span class="phone-peer"><b>Sharma Fresh Mart</b><small data-typing>Open now</small></span>
+              </div>
+              <div class="feed">
+                <div class="msg msg-them"><p>Namaste! Aaj taaza tamatar aaye hain.</p></div>
+                <div class="msg msg-me" data-show="1">
+                  <p data-typewriter>2 kilo pyaaz, 1 kg tamatar aur 1 litre doodh bhej do</p>
+                  <span class="msg-meta">4:46 pm, read</span>
+                </div>
+                <div class="reveal" data-show="1"><div><button class="chip-btn" tabindex="-1" type="button">Make cart</button></div></div>
+
+                <div class="reveal" data-show="2"><div>
+                  <article class="card">
+                    <header><b>Cart #DVXTD8</b><span class="pill" data-cart-pill>Draft</span></header>
+                    <ul class="card-lines">
+                      <li><span>Onion (Pyaaz)<small>2 kg at ₹40</small></span><b>₹80</b></li>
+                      <li><span>Tomato (Tamatar)<small>1 kg at ₹35</small></span><b>₹35</b></li>
+                      <li><span>Amul Taaza 500 ml<small>2 packs at ₹28</small></span><b>₹56</b></li>
+                    </ul>
+                    <footer><span>Estimated total</span><b>₹171</b></footer>
+                  </article>
+                </div></div>
+
+                <div class="reveal" data-show="3"><div>
+                  <article class="card card-bill">
+                    <header><b>Bill #DVXTD8</b><span class="pill pill-leaf">From the shop</span></header>
+                    <ul class="card-lines">
+                      <li><span>3 items</span><b>₹171</b></li>
+                      <li><span>Delivery</span><b>₹10</b></li>
+                    </ul>
+                    <footer><span>Total</span><b>₹181</b></footer>
+                    <div class="card-actions"><span class="fake-btn">Cash on delivery</span><span class="fake-btn fake-btn-leaf">Pay by UPI</span></div>
+                  </article>
+                </div></div>
+
+                <div class="reveal" data-show="4"><div>
+                  <article class="card card-status">
+                    <header><b>Order #DVXTD8</b><span class="pill pill-leaf" data-stage-label>Accepted</span></header>
+                    <ol class="track" data-track>
+                      <li>Accepted</li><li>Packed</li><li>On the way</li><li>Delivered</li>
+                    </ol>
+                    <p class="card-note">UPI, ₹181. Marked paid, shop confirmed.</p>
+                  </article>
+                </div></div>
+              </div>
+              <div class="composer" aria-hidden="true"><span>Type your list or a message</span><i></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="counter" id="shops" aria-labelledby="counter-title">
+      <div class="wrap">
+        <h2 id="counter-title">Both sides of the counter</h2>
+        <div class="counter-grid">
+          <div class="side">
+            <h3>If you’re ordering</h3>
+            <ul class="ticks">
+              <li>Shops near you, open ones first, with search by shop or by item.</li>
+              <li>Each shop’s real catalog, prices, hours, delivery radius and rating.</li>
+              <li>Edit the cart before the shop bills it: change quantities, remove lines, add from the catalog.</li>
+              <li>Pay cash on delivery, or open your UPI app with the exact amount filled in.</li>
+              <li>Share your delivery spot as a location pin, right in the chat.</li>
+              <li>Order history with one-tap reorder at today’s prices.</li>
+            </ul>
+          </div>
+          <div class="side">
+            <h3>If you run a shop</h3>
+            <ul class="ticks">
+              <li>Set up in minutes: photo, location pin, hours, delivery radius and UPI ID.</li>
+              <li>Paste your price list (“Aloo 30/kg, Amul Taaza 500ml 28”) and AI turns it into catalog rows to check and save.</li>
+              <li>New carts arrive live with an alert, and the dashboard counts what needs you.</li>
+              <li>A bill editor built for the counter: in stock or not, quantity, price, delivery fee, note.</li>
+              <li>Move the order along, confirm UPI or cash, or cancel with a reason the customer sees.</li>
+              <li>An open or closed switch. Closed shops still chat; they just don’t take carts.</li>
+            </ul>
+            <div class="mini-dash" aria-label="Example shop dashboard">
+              <div><small>Today’s sales</small><b>₹4,280</b></div>
+              <div><small>Carts to bill</small><b class="alert">3</b></div>
+              <div><small>Out for delivery</small><b>2</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="nexconn" id="nexconn" aria-labelledby="nx-title">
+      <div class="wrap">
+        <h2 id="nx-title">The order lives in the chat</h2>
+        <p class="section-lede">LocalCart runs on Nexconn Chat in the Singapore data centre. The phones use the Nexconn Android Chat SDK; our server uses the Platform Chat API to post order cards and move them along.</p>
+
+        <figure class="arch">
+          <svg viewBox="0 0 960 360" role="img" aria-labelledby="arch-title arch-desc">
+            <title id="arch-title">How LocalCart uses Nexconn</title>
+            <desc id="arch-desc">Customer and shop phones connect to Nexconn with the Android Chat SDK. The LocalCart server posts cart, bill and status cards and updates their metadata through the Platform Chat API, and keeps orders in Postgres.</desc>
+            <defs>
+              <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="currentColor"/></marker>
+            </defs>
+            <g class="node">
+              <rect x="20" y="40" width="200" height="96" rx="14"/>
+              <text x="120" y="80">Customer’s phone</text>
+              <text x="120" y="106" class="sub">Android Chat SDK</text>
+            </g>
+            <g class="node">
+              <rect x="740" y="40" width="200" height="96" rx="14"/>
+              <text x="120" y="80" transform="translate(720 0)">Shop’s phone</text>
+              <text x="120" y="106" class="sub" transform="translate(720 0)">Android Chat SDK</text>
+            </g>
+            <g class="node node-nx">
+              <rect x="300" y="28" width="360" height="120" rx="18"/>
+              <text x="480" y="72">Nexconn Chat (Singapore)</text>
+              <text x="480" y="98" class="sub">direct channels, card messages,</text>
+              <text x="480" y="118" class="sub">metadata, receipts, typing, unread</text>
+            </g>
+            <g class="node">
+              <rect x="300" y="236" width="360" height="96" rx="14"/>
+              <text x="480" y="276">LocalCart API on Vercel</text>
+              <text x="480" y="302" class="sub">order state machine, Gemini, Postgres</text>
+            </g>
+            <g class="edges">
+              <path d="M220 88H296" marker-end="url(#arr)" marker-start="url(#arr)"/>
+              <path d="M740 88H664" marker-end="url(#arr)" marker-start="url(#arr)"/>
+              <path d="M480 232V152" marker-end="url(#arr)"/>
+              <path d="M120 136V284H296" marker-end="url(#arr)"/>
+              <path d="M840 136V284H664" marker-end="url(#arr)"/>
+            </g>
+            <g class="edge-labels">
+              <text x="492" y="190" text-anchor="start">Platform Chat API: send card,</text>
+              <text x="492" y="210" text-anchor="start">set metadata, update message</text>
+              <text x="132" y="272" text-anchor="start">REST: carts, orders</text>
+              <text x="828" y="272" text-anchor="end">REST: bills, status</text>
+            </g>
+          </svg>
+        </figure>
+
+        <div class="anatomy">
+          <div class="anatomy-copy">
+            <h3>Why a card can’t go stale</h3>
+            <p>Postgres holds the order. The server posts each card once, as a custom Nexconn message with metadata enabled. Every change after that (accepted, packed, paid, rated) is a metadata update on the same message, so both phones re-draw the card where it already is. Editing a cart uses Nexconn’s message update, so the original Cart card changes for both people.</p>
+            <p>And whenever a card scrolls into view, the app re-reads the order from the API, so even a missed realtime event can’t leave a card wrong.</p>
+          </div>
+          <pre class="payload" aria-label="Example status card message"><code><span class="k">type</span>      lcr:status
+<span class="k">content</span>   { code: "DVXTD8", totalPaise: 18100,
+            paymentMethod: "upi", itemCount: 3 }
+<span class="k">metadata</span>  status:  <span class="swap" data-swap="accepted,packed,out_for_delivery,delivered">accepted</span>
+          payment: confirmed</code></pre>
+        </div>
+
+        <dl class="features">
+          <div><dt>Custom message types</dt><dd><code>lcr:cart</code>, <code>lcr:bill</code> and <code>lcr:status</code> cards, registered in the app and sent by the server.</dd></div>
+          <div><dt>Message metadata</dt><dd>Live order state on each card, set by the server on every change and received through <code>onMessageMetadataUpdated</code>.</dd></div>
+          <div><dt>Message update</dt><dd>Cart edits replace the original card’s content on both phones.</dd></div>
+          <div><dt>HD voice and images</dt><dd>Spoken orders as AAC voice notes the shop can play, and product photos with upload progress.</dd></div>
+          <div><dt>Location messages</dt><dd>Delivery pins with a map preview, sent as the built-in location type.</dd></div>
+          <div><dt>Receipts, typing, unread</dt><dd>Read ticks, “typing…” in the header, and unread badges on tabs, the chat list and the shop dashboard.</dd></div>
+          <div><dt>Tokens and reconnects</dt><dd>Server-issued tokens, refreshed and reconnected automatically, with an “open on another phone” state.</dd></div>
+          <div><dt>Offline history</dt><dd>Conversations and messages page in from the SDK’s local database, with retry for failed sends.</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="screens" aria-labelledby="screens-title">
+      <div class="wrap">
+        <h2 id="screens-title">From the app</h2>
+        <p class="section-lede">Screens from the release build, against the live backend.</p>
+      </div>
+      <div class="screens-strip" tabindex="0" aria-label="App screenshots, scroll sideways">
+        <figure><img src="/screens/discover.webp" alt="Nearby shops list with search and category filters" width="540" height="1200" loading="lazy"><figcaption>Shops near you</figcaption></figure>
+        <figure><img src="/screens/shop.webp" alt="A shop page with hours, delivery radius and catalog" width="540" height="1200" loading="lazy"><figcaption>A shop’s catalog</figcaption></figure>
+        <figure><img src="/screens/cart.webp" alt="A cart card made from a Hinglish message" width="540" height="1200" loading="lazy"><figcaption>Cart from a message</figcaption></figure>
+        <figure><img src="/screens/bill-editor.webp" alt="The shop's bill editor" width="540" height="1200" loading="lazy"><figcaption>Shop prepares the bill</figcaption></figure>
+        <figure><img src="/screens/status.webp" alt="An order status card updating live" width="540" height="1200" loading="lazy"><figcaption>Live order card</figcaption></figure>
+        <figure><img src="/screens/dashboard.webp" alt="Shop dashboard with sales and orders to handle" width="540" height="1200" loading="lazy"><figcaption>Shop dashboard</figcaption></figure>
+      </div>
+    </section>
+
+    <section class="faq" aria-labelledby="faq-title">
+      <div class="wrap wrap-narrow">
+        <h2 id="faq-title">Questions people ask</h2>
+        <details>
+          <summary>Which languages can I order in?</summary>
+          <p>Type or speak in Hindi, English or a mix of both. Voice notes are transcribed, and the transcript is kept on the order so the shop can check what you said.</p>
+        </details>
+        <details>
+          <summary>What if the shop doesn’t have something?</summary>
+          <p>The shop marks it unavailable on the bill and the total updates before you accept. Items the AI couldn’t match to the catalog stay on the cart for the shop to price.</p>
+        </details>
+        <details>
+          <summary>How does UPI payment work?</summary>
+          <p>Tapping Pay by UPI opens your UPI app with the shop’s UPI ID and the exact amount. After paying, tap “I’ve paid”; the shop confirms when the money arrives. There’s no payment gateway in between, so LocalCart never handles your money.</p>
+        </details>
+        <details>
+          <summary>Will I get alerts when the app is closed?</summary>
+          <p>Not yet. Messages and order updates alert you while LocalCart is open or running in the background. Push notifications after the app is fully closed are on the list.</p>
+        </details>
+        <details>
+          <summary>Who sees my phone number and address?</summary>
+          <p>Only a shop you send an order to, so they can deliver it. Customers browsing shops never see each other. Read the <a href="/privacy">privacy note</a> for the details.</p>
+        </details>
+      </div>
+    </section>
+
+    <section class="cta" aria-labelledby="cta-title">
+      <div class="wrap cta-inner">
+        <h2 id="cta-title">Your shop is one message away.</h2>
+        <a class="btn btn-ink" href="/download">Download for Android</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot-inner">
+      <a class="brand" href="/" aria-label="LocalCart home">
+        <img src="/favicon.svg" alt="" width="28" height="28">
+        <span>LocalCart</span>
+      </a>
+      <nav aria-label="Footer">
+        <a href="/download">Android app</a>
+        <a href="https://github.com/happypapa636/Local-Cart">Source on GitHub</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/api/health">API status</a>
+      </nav>
+      <p>Made for neighbourhood shops in India. Chat by Nexconn.</p>
+    </div>
+  </footer>
+</body>
+</html>

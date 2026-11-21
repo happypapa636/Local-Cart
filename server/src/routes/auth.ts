@@ -13,7 +13,7 @@ import {
   selfView,
   verifyPassword,
 } from '../lib/auth.js';
-import { conflict, readJson, unauthorized } from '../lib/http.js';
+import { ApiError, conflict, readJson, unauthorized } from '../lib/http.js';
 import { nexconnUserId } from '../lib/ids.js';
 import { rateLimit } from '../lib/rateLimit.js';
 import { clientIp } from '../lib/request.js';
@@ -84,6 +84,21 @@ authRoutes.post('/auth/login', async (c) => {
 });
 
 authRoutes.get('/me', requireAuth, (c) => c.json({ user: selfView(currentUser(c)) }));
+
+/**
+ * Deletes the account for good. The password is asked again so a borrowed, unlocked phone can't do it.
+ * The shop, catalog, chats and orders go with it (foreign keys cascade).
+ */
+authRoutes.delete('/me', requireAuth, async (c) => {
+  const user = currentUser(c);
+  const { password } = await readJson(c, z.object({ password: z.string().min(1, 'Enter your password.').max(128) }));
+  await rateLimit(`delete-account:${user.id}`, 5, 900, 'Too many attempts. Wait 15 minutes and try again.');
+  if (!(await verifyPassword(password, user.passwordHash))) {
+    throw new ApiError(403, 'wrong_password', 'That password is not right.');
+  }
+  await db().delete(users).where(eq(users.id, user.id));
+  return c.json({ deleted: true });
+});
 
 authRoutes.patch('/me', requireAuth, async (c) => {
   const user = currentUser(c);
