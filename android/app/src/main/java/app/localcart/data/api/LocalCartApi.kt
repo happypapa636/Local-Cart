@@ -5,6 +5,7 @@ import okhttp3.RequestBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.HTTP
 import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -16,11 +17,13 @@ import retrofit2.http.Query
 /** LocalCart backend (server/src/routes). Every call except auth and config needs a session. */
 interface LocalCartApi {
     @GET("api/config") suspend fun config(): ConfigDto
+    @GET("api/release") suspend fun release(): ReleaseResponse
 
     @POST("api/auth/signup") suspend fun signup(@Body body: SignupRequest): AuthResponse
     @POST("api/auth/login") suspend fun login(@Body body: LoginRequest): AuthResponse
     @GET("api/me") suspend fun me(): UserResponse
     @PATCH("api/me") suspend fun updateMe(@Body body: UpdateMeRequest): UserResponse
+    @HTTP(method = "DELETE", path = "api/me", hasBody = true) suspend fun deleteMe(@Body body: DeleteAccountRequest): DeletedResponse
 
     @POST("api/chat/token") suspend fun chatToken(@Body body: TokenRequest): ChatTokenDto
     @POST("api/chats") suspend fun openChat(@Body body: OpenChatRequest): PeerResponse

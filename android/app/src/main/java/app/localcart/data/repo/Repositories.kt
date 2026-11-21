@@ -23,6 +23,18 @@ class AuthRepository(private val api: LocalCartApi, private val session: Session
     suspend fun refreshMe(): UserDto = apiCall { api.me() }.user.also(session::updateUser)
 
     suspend fun updateMe(request: UpdateMeRequest): UserDto = apiCall { api.updateMe(request) }.user.also(session::updateUser)
+
+    /** Deletes the account on the server (password re-checked there). The caller signs out afterwards. */
+    suspend fun deleteAccount(password: String) {
+        apiCall { api.deleteMe(DeleteAccountRequest(password)) }
+    }
+
+    /** The latest release, or null when it can't be checked (offline); never blocks the app. */
+    suspend fun latestRelease(): ReleaseDto? = try {
+        apiCall { api.release() }.release
+    } catch (e: ApiException) {
+        null
+    }
 }
 
 class ShopRepository(private val api: LocalCartApi) {

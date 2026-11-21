@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy | LocalCart</title>
+  <meta name="description" content="What LocalCart collects, why, who can see it, and how to delete your account.">
+  <meta name="theme-color" content="#F6C445">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Devanagari:wdth,wght@75..125,300..800&display=swap">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="nav is-scrolled">
+    <div class="nav-inner">
+      <a class="brand" href="/" aria-label="LocalCart home">
+        <img src="/favicon.svg" alt="" width="36" height="36">
+        <span>LocalCart</span>
+      </a>
+      <a class="btn btn-ink btn-small" href="/download" style="margin-left:auto">Get the app</a>
+    </div>
+  </header>
+
+  <main class="doc">
+    <div class="wrap wrap-narrow">
+      <h1>Privacy</h1>
+      <p class="updated">Last updated 21 November 2026</p>
+
+      <p>LocalCart connects people with neighbourhood shops so they can order by chat. This note explains what the app stores, why, and who can see it.</p>
+
+      <h2>What we store</h2>
+      <ul>
+        <li><strong>Your account:</strong> name, mobile number, whether you order or run a shop, and a password stored only as a bcrypt hash.</li>
+        <li><strong>Your location:</strong> the delivery address and map point you choose, used to find shops near you and to deliver. Location is read only when you tap to use it.</li>
+        <li><strong>Shops:</strong> shop name, photo, phone, address, map point, hours, delivery radius, UPI ID and catalog, which are shown to customers.</li>
+        <li><strong>Orders:</strong> items, prices, bills, payment method and status, ratings, and the message or voice-note transcript an order was made from.</li>
+        <li><strong>Chat:</strong> messages, photos, voice notes and shared locations are carried and stored by Nexconn, our chat provider, in its Singapore data centre.</li>
+      </ul>
+
+      <h2>Who sees what</h2>
+      <ul>
+        <li>A shop sees your name, phone number and delivery address only for orders you send to it, so it can deliver.</li>
+        <li>Customers see a shop’s public details and catalog. Customers never see each other.</li>
+        <li>Nobody else can open an order or a chat. Every request is checked against the customer and shop on it.</li>
+      </ul>
+
+      <h2>Services we use</h2>
+      <ul>
+        <li><strong>Nexconn</strong> for chat, voice notes, photos and order cards.</li>
+        <li><strong>Google Gemini</strong> to read a typed list, a voice note or a pasted price list and turn it into items. Only that text or audio and the shop’s catalog are sent.</li>
+        <li><strong>Neon</strong> (Postgres) for accounts, shops and orders, and <strong>Vercel</strong> for the API and photo storage. Shop and item photos are publicly viewable by link.</li>
+      </ul>
+      <p>We don’t sell data, show ads, or use analytics trackers in the app.</p>
+
+      <h2>Payments</h2>
+      <p>UPI payments happen in your own UPI app, directly to the shop. LocalCart never sees your bank or UPI details; it only records that you marked an order paid and that the shop confirmed it.</p>
+
+      <h2>Deleting your account</h2>
+      <p>In the app, open Account and tap Delete account, then confirm with your password. Your account, your shop and catalog if you have one, and your orders are deleted from our database straight away. Chat messages already delivered stay on the other person’s phone.</p>
+
+      <h2>Contact</h2>
+      <p>Questions or requests: open an issue on <a href="https://github.com/happypapa636/Local-Cart/issues">GitHub</a>.</p>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot-inner">
+      <a class="brand" href="/" aria-label="LocalCart home">
+        <img src="/favicon.svg" alt="" width="28" height="28">
+        <span>LocalCart</span>
+      </a>
+      <p>Made for neighbourhood shops in India. Chat by Nexconn.</p>
+    </div>
+  </footer>
+</body>
+</html>

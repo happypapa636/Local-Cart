@@ -256,3 +256,17 @@ data class CartLineRequest(
 @Serializable data class LocationRequest(val lat: Double, val lng: Double, val address: String? = null)
 @Serializable data class ShareLocationRequest(val peerNexconnId: String, val lat: Double, val lng: Double, val place: String, val thumbnail: String)
 @Serializable data class MessageIdResponse(val messageId: String)
+
+@Serializable data class DeleteAccountRequest(val password: String)
+@Serializable data class DeletedResponse(val deleted: Boolean)
+
+/** The latest published APK (server/src/release.ts), used to offer updates. */
+@Serializable
+data class ReleaseDto(
+    val versionCode: Int,
+    val versionName: String,
+    val apkUrl: String,
+    val sizeMb: Int = 0,
+    val notes: String = "",
+)
+@Serializable data class ReleaseResponse(val release: ReleaseDto)

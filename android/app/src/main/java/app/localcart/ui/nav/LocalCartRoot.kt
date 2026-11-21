@@ -1,10 +1,20 @@
 package app.localcart.ui.nav
 
+import androidx.compose.foundation.layout.WindowInsets
 import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.navigation.NavBackStackEntry
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -119,7 +129,7 @@ fun LocalCartRoot(container: AppContainer, pendingChat: MutableStateFlow<String?
 @Composable
 private fun AuthFlow(container: AppContainer) {
     val nav = rememberNavController()
-    NavHost(nav, startDestination = WelcomeRoute) {
+    NavHost(nav, startDestination = WelcomeRoute, enterTransition = enter, exitTransition = exit, popEnterTransition = popEnter, popExitTransition = popExit) {
         composable<WelcomeRoute> {
             WelcomeScreen(onChooseRole = { nav.navigate(SignUpRoute(it)) }, onSignIn = { nav.navigate(SignInRoute) })
         }
@@ -147,7 +157,7 @@ private fun SignedInFlow(container: AppContainer, user: UserDto, pendingChat: Mu
     NotificationPermissionOnce(container)
 
     Box(Modifier.fillMaxSize()) {
-        NavHost(controller, startDestination = HomeRoute) {
+        NavHost(controller, startDestination = HomeRoute, enterTransition = enter, exitTransition = exit, popEnterTransition = popEnter, popExitTransition = popExit) {
             composable<HomeRoute> { HomeScreen(container, user, nav) }
             composable<ShopRoute> { entry -> ShopDetailScreen(container, entry.toRoute<ShopRoute>().shopId, nav) }
             composable<ChatRoute> { entry -> ChatScreen(container, entry.toRoute<ChatRoute>().peerId, nav) }
@@ -160,6 +170,23 @@ private fun SignedInFlow(container: AppContainer, user: UserDto, pendingChat: Mu
         MessageBanner(container, onOpen = { nav.chat(it) })
         SignedInElsewhereDialog(container)
     }
+}
+
+/*
+ * Screen transitions: a new screen slides in a little from the right while fading in; going back
+ * reverses it. Short and small, so it reads as "forward" and "back" without slowing anyone down.
+ */
+private val enter: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
+    fadeIn(tween(220, delayMillis = 40)) + slideInHorizontally(tween(280, easing = FastOutSlowInEasing)) { it / 8 }
+}
+private val exit: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
+    fadeOut(tween(160)) + slideOutHorizontally(tween(280, easing = FastOutSlowInEasing)) { -it / 16 }
+}
+private val popEnter: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
+    fadeIn(tween(220, delayMillis = 40)) + slideInHorizontally(tween(280, easing = FastOutSlowInEasing)) { -it / 16 }
+}
+private val popExit: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
+    fadeOut(tween(160)) + slideOutHorizontally(tween(280, easing = FastOutSlowInEasing)) { it / 8 }
 }
 
 private data class Tab(val label: String, val icon: ImageVector)
@@ -184,8 +211,8 @@ private fun CustomerHome(container: AppContainer, nav: Nav) {
         Tab("Chats", Icons.Outlined.ChatBubbleOutline),
         Tab("Account", Icons.Outlined.PersonOutline),
     )
-    TabScaffold(container, tabs, tab, chatTabIndex = 2, onSelect = { tab = it }) {
-        when (tab) {
+    TabScaffold(container, tabs, tab, chatTabIndex = 2, onSelect = { tab = it }) { shown ->
+        when (shown) {
             0 -> DiscoverScreen(container, nav)
             1 -> OrdersScreen(container, nav)
             2 -> ChatListScreen(container, nav)
@@ -204,8 +231,8 @@ private fun ShopkeeperHome(container: AppContainer, nav: Nav) {
         Tab("Catalog", Icons.Outlined.Inventory2),
         Tab("Account", Icons.Outlined.PersonOutline),
     )
-    TabScaffold(container, tabs, tab, chatTabIndex = 2, onSelect = { tab = it }) {
-        when (tab) {
+    TabScaffold(container, tabs, tab, chatTabIndex = 2, onSelect = { tab = it }) { shown ->
+        when (shown) {
             0 -> DashboardScreen(container, nav, onOpenOrders = { tab = 1 }, onOpenChats = { tab = 2 })
             1 -> OrdersScreen(container, nav)
             2 -> ChatListScreen(container, nav)
@@ -222,11 +249,13 @@ private fun TabScaffold(
     selected: Int,
     chatTabIndex: Int,
     onSelect: (Int) -> Unit,
-    content: @Composable () -> Unit,
+    content: @Composable (Int) -> Unit,
 ) {
     val unread by container.chat.totalUnread.collectAsState()
     Scaffold(
         containerColor = Palette.Paper,
+        // Each tab owns the top inset: the haldi headers paint behind the status bar.
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             NavigationBar(containerColor = Palette.Sheet, tonalElevation = 0.dp) {
                 tabs.forEachIndexed { index, tab ->
@@ -242,9 +271,9 @@ private fun TabScaffold(
                         },
                         label = { Text(tab.label, style = MaterialTheme.typography.labelMedium) },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Palette.Leaf,
-                            selectedTextColor = Palette.Leaf,
-                            indicatorColor = Palette.LeafTint,
+                            selectedIconColor = Palette.Ink,
+                            selectedTextColor = Palette.Ink,
+                            indicatorColor = Palette.Haldi,
                             unselectedIconColor = Palette.InkMuted,
                             unselectedTextColor = Palette.InkMuted,
                         ),
@@ -253,7 +282,9 @@ private fun TabScaffold(
             }
         },
     ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding).background(Palette.Paper)) { content() }
+        Box(Modifier.fillMaxSize().padding(padding).background(Palette.Paper)) {
+            Crossfade(targetState = selected, animationSpec = tween(180), label = "tab") { content(it) }
+        }
     }
 }
 
@@ -277,14 +308,15 @@ private fun MessageBanner(container: AppContainer, onOpen: (String) -> Unit) {
         Surface(
             shape = MaterialTheme.shapes.medium,
             color = Palette.Ink,
-            border = BorderStroke(1.dp, Palette.Ink),
+            border = BorderStroke(1.dp, Palette.Haldi.copy(alpha = 0.5f)),
+            shadowElevation = 8.dp,
             modifier = Modifier.fillMaxWidth().clickable {
                 container.notifier.dismissBanner()
                 onOpen(b.peerId)
             },
         ) {
             Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.ChatBubbleOutline, contentDescription = null, tint = Palette.Paper)
+                Icon(Icons.Outlined.ChatBubbleOutline, contentDescription = null, tint = Palette.Haldi)
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(b.title, style = MaterialTheme.typography.titleSmall, color = Palette.Paper, maxLines = 1, overflow = TextOverflow.Ellipsis)

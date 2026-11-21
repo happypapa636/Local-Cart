@@ -1,5 +1,27 @@
 package app.localcart.ui.chat
 
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.outlined.ShoppingBasket
+import androidx.compose.material.icons.outlined.ReceiptLong
+import androidx.compose.material.icons.outlined.LocalShipping
+import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -60,9 +82,17 @@ class CardActions(
 
 private fun CardLine.toLedger() = LedgerLine(name, quantity, unit, if (isPriced) unitPricePaise else null, lineTotalPaise, available, matched)
 
+/** Which document a card is; each gets its own header colour so it can be spotted in a long chat. */
+private enum class SlipKind(val band: Color, val onBand: Color, val icon: ImageVector) {
+    Cart(Palette.Haldi, Palette.Ink, Icons.Outlined.ShoppingBasket),
+    Bill(Palette.Leaf, Palette.Paper, Icons.Outlined.ReceiptLong),
+    Status(Palette.Ink, Palette.Paper, Icons.Outlined.LocalShipping),
+}
+
 /**
- * The slip: a white sheet with a hairline border, the order code on top, ledger lines and a total under
- * a dashed tear rule. Cart, Bill and Order status cards all share it so they read as one document.
+ * The slip: a white sheet with a coloured header band (type and order code), ledger lines and a total
+ * under a dashed tear rule. Cart, Bill and Order status cards all share it so they read as one
+ * document. Live changes (status, new actions) animate in place, as the card is updated, not re-sent.
  */
 @Composable
 private fun Slip(
@@ -71,24 +101,38 @@ private fun Slip(
     statusText: String,
     tone: Tone,
     onOpen: () -> Unit,
+    kind: SlipKind = SlipKind.Cart,
     content: @Composable () -> Unit,
 ) {
     Surface(
-        shape = MaterialTheme.shapes.medium,
+        shape = MaterialTheme.shapes.large,
         color = Palette.Sheet,
-        border = BorderStroke(1.dp, Palette.RuleStrong),
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onOpen),
+        border = BorderStroke(1.dp, Palette.Rule),
+        shadowElevation = 1.dp,
+        modifier = Modifier.fillMaxWidth().clickable(onClickLabel = "Open order", onClick = onOpen),
     ) {
-        Column(Modifier.padding(14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(title, style = MaterialTheme.typography.titleMedium)
-                    Text("#$code", style = LocalFigures.current.small, color = Palette.InkMuted)
+        Column(Modifier.animateContentSize(spring(stiffness = Spring.StiffnessMediumLow))) {
+            Row(
+                Modifier.fillMaxWidth().background(kind.band).padding(start = 14.dp, end = 10.dp, top = 10.dp, bottom = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(kind.icon, contentDescription = null, tint = kind.onBand, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(title, style = MaterialTheme.typography.titleSmall, color = kind.onBand, maxLines = 1)
+                Spacer(Modifier.width(8.dp))
+                Text("#$code", style = LocalFigures.current.small, color = kind.onBand.copy(alpha = 0.75f))
+                Spacer(Modifier.weight(1f))
+                AnimatedContent(
+                    targetState = statusText to tone,
+                    transitionSpec = { (fadeIn(tween(250)) + scaleIn(initialScale = 0.85f)) togetherWith fadeOut(tween(150)) },
+                    label = "slip-status",
+                ) { (text, t) ->
+                    Box(Modifier.clip(CircleShape).background(Palette.Sheet)) { StatusTag(text, t) }
                 }
-                StatusTag(statusText, tone)
             }
-            Spacer(Modifier.height(10.dp))
-            content()
+            Column(Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = 14.dp)) {
+                content()
+            }
         }
     }
 }
@@ -157,7 +201,7 @@ fun BillCard(card: BillCardMessage, meta: CardState, order: OrderDto?, viewerIsC
         OrderStatus.CANCELLED -> "Cancelled"
         else -> "Accepted"
     }
-    Slip("Bill", card.code, statusText, if (status == OrderStatus.CANCELLED) Tone.Negative else if (status == OrderStatus.BILLED) Tone.Strong else Tone.Positive, { actions.openOrder(card.orderId) }) {
+    Slip("Bill", card.code, statusText, if (status == OrderStatus.CANCELLED) Tone.Negative else if (status == OrderStatus.BILLED) Tone.Strong else Tone.Positive, { actions.openOrder(card.orderId) }, SlipKind.Bill) {
         Ledger(card.items.map { it.toLedger() })
         if (card.deliveryFeePaise > 0) KeyValueRow("Delivery", Money.format(card.deliveryFeePaise))
         TotalRow("Total", card.totalPaise)
@@ -185,7 +229,7 @@ fun StatusCard(card: StatusCardMessage, meta: CardState, order: OrderDto?, viewe
     val status = order?.status ?: meta.status ?: OrderStatus.ACCEPTED
     val payment = order?.paymentStatus ?: meta.payment ?: "pending"
     val method = order?.paymentMethod ?: card.paymentMethod.ifBlank { null }
-    Slip("Order ${OrderStatus.label(status).lowercase()}", card.code, OrderStatus.label(status), statusTone(status), { actions.openOrder(card.orderId) }) {
+    Slip("Order", card.code, OrderStatus.label(status), statusTone(status), { actions.openOrder(card.orderId) }, SlipKind.Status) {
         if (status == OrderStatus.CANCELLED) {
             Text("Cancelled: ${meta.reason ?: order?.cancelReason ?: "no reason given"}", style = MaterialTheme.typography.bodyMedium, color = Palette.Chilli)
         } else {

@@ -256,4 +256,18 @@ describe.skipIf(!enabled)('LocalCart API: full order loop on the real stack', ()
     const names = res.json.order.items.map((i: Json) => i.name);
     expect(names).toEqual(expect.arrayContaining(['Potato (Aloo)', 'Eggs', 'Tata Salt 1 kg']));
   });
+
+  it('deletes an account only with the right password, and the session dies with it', async () => {
+    expect((await call('DELETE', '/me', stranger.token, { password: 'not-the-password' })).status).toBe(403);
+    const res = await call('DELETE', '/me', stranger.token, { password: 'test-password-123' });
+    expect(res.json.deleted).toBe(true);
+    expect((await call('GET', '/me', stranger.token)).status).toBe(401);
+    expect((await call('POST', '/auth/login', undefined, { phone: stranger.phone, password: 'test-password-123' })).status).toBe(401);
+  });
+
+  it('serves the release info the app checks for updates', async () => {
+    const res = await call('GET', '/release');
+    expect(res.json.release.versionCode).toBeGreaterThanOrEqual(1);
+    expect(res.json.release.apkUrl).toMatch(/^https:\/\/.+\.apk$/);
+  });
 });

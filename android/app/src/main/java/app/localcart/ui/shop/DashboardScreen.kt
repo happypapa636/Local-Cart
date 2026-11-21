@@ -1,5 +1,21 @@
 package app.localcart.ui.shop
 
+import app.localcart.ui.components.SignboardHeader
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.Surface
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,7 +60,6 @@ import app.localcart.ui.components.HairlineDivider
 import app.localcart.ui.components.InlineNotice
 import app.localcart.ui.components.LoadingState
 import app.localcart.ui.components.QuietButton
-import app.localcart.ui.components.ScreenHeading
 import app.localcart.ui.components.SectionLabel
 import app.localcart.ui.components.Sheet
 import app.localcart.ui.components.Thumb
@@ -123,17 +138,25 @@ fun DashboardScreen(container: AppContainer, nav: Nav, onOpenOrders: () -> Unit,
     val shop = myShop ?: data?.shop
 
     Column(Modifier.fillMaxSize()) {
-        ScreenHeading(title = shop?.name ?: "Today", subtitle = shop?.let { Hours.range(it.opensAt, it.closesAt) }, trailing = {
-            QuietButton("Edit shop", onClick = nav::shopSettings)
-        })
+        SignboardHeader(
+            title = shop?.name ?: "Today",
+            subtitle = shop?.let { "Open ${Hours.range(it.opensAt, it.closesAt)}" },
+            trailing = { QuietButton("Edit shop", onClick = nav::shopSettings, color = Palette.Ink) },
+        )
         when {
             state.loading -> LoadingState()
             state.error != null -> ErrorState(state.error!!, onRetry = { vm.load() })
             data != null && shop != null -> PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = vm::refresh, modifier = Modifier.fillMaxSize()) {
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
                     item {
-                        Sheet(Modifier.padding(horizontal = 20.dp, vertical = 6.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                        val openBg by animateColorAsState(if (shop.isOpen) Palette.Sheet else Palette.ChilliTint, label = "open-bg")
+                        Surface(
+                            shape = MaterialTheme.shapes.large,
+                            color = openBg,
+                            border = BorderStroke(1.dp, Palette.Rule),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+                        ) {
+                            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.weight(1f)) {
                                     Text(if (shop.isOpen) "Taking orders" else "Not taking orders", style = MaterialTheme.typography.titleMedium, color = if (shop.isOpen) Palette.Leaf else Palette.Chilli)
                                     Text(
@@ -156,14 +179,14 @@ fun DashboardScreen(container: AppContainer, nav: Nav, onOpenOrders: () -> Unit,
                     }
                     state.notice?.let { item { InlineNotice(it, modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)) } }
                     item {
-                        Row(Modifier.padding(horizontal = 20.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Stat("Today's sales", Money.format(data.todaySalesPaise), "${data.todayDelivered} delivered", Modifier.weight(1.3f))
+                        Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Stat("Today's sales", Money.format(data.todaySalesPaise), "${data.todayDelivered} delivered", Modifier.weight(1.3f), strong = true)
                             Stat("Orders today", data.todayOrders.toString(), "${data.pendingPayments} payments open", Modifier.weight(1f))
                         }
                     }
                     item { SectionLabel("Orders that need you") }
                     item {
-                        Sheet(Modifier.padding(horizontal = 20.dp), padding = PaddingValues(vertical = 4.dp)) {
+                        Sheet(Modifier.padding(horizontal = 16.dp), padding = PaddingValues(vertical = 4.dp)) {
                             Column {
                                 val rows = listOf(
                                     OrderStatus.PLACED to "Carts to bill",
@@ -179,7 +202,7 @@ fun DashboardScreen(container: AppContainer, nav: Nav, onOpenOrders: () -> Unit,
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
                                         Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f), color = if (count > 0) Palette.Ink else Palette.InkMuted)
-                                        Text(count.toString(), style = LocalFigures.current.medium, color = if (count > 0 && status == OrderStatus.PLACED) Palette.Chilli else Palette.Ink)
+                                        PipelineCount(count, urgent = status == OrderStatus.PLACED)
                                     }
                                     if (index < rows.lastIndex) HairlineDivider(Modifier.padding(start = 16.dp))
                                 }
@@ -223,14 +246,40 @@ fun DashboardScreen(container: AppContainer, nav: Nav, onOpenOrders: () -> Unit,
     }
 }
 
+/** A day's figure. The strong one (sales) is the only dark tile on the screen, so it's read first. */
 @Composable
-private fun Stat(label: String, value: String, caption: String, modifier: Modifier = Modifier) {
-    Sheet(modifier) {
-        Column {
-            Text(label, style = MaterialTheme.typography.bodySmall)
+private fun Stat(label: String, value: String, caption: String, modifier: Modifier = Modifier, strong: Boolean = false) {
+    Surface(
+        shape = MaterialTheme.shapes.large,
+        color = if (strong) Palette.Ink else Palette.Sheet,
+        border = if (strong) null else BorderStroke(1.dp, Palette.Rule),
+        modifier = modifier,
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Text(label, style = MaterialTheme.typography.bodySmall, color = if (strong) Palette.Paper.copy(alpha = 0.72f) else Palette.InkMuted)
             Spacer(Modifier.height(4.dp))
-            Text(value, style = LocalFigures.current.large, maxLines = 1)
-            Text(caption, style = MaterialTheme.typography.bodySmall)
+            AnimatedContent(targetState = value, transitionSpec = { (fadeIn() + slideInVertically { it / 2 }) togetherWith fadeOut() }, label = "stat") { v ->
+                Text(v, style = LocalFigures.current.large, color = if (strong) Palette.Haldi else Palette.Ink, maxLines = 1)
+            }
+            Text(caption, style = MaterialTheme.typography.bodySmall, color = if (strong) Palette.Paper.copy(alpha = 0.72f) else Palette.InkMuted)
+        }
+    }
+}
+
+/** Count of orders at one step; lights up when there is work, in haldi for carts waiting on a bill. */
+@Composable
+private fun PipelineCount(count: Int, urgent: Boolean) {
+    val bg by animateColorAsState(
+        when {
+            count == 0 -> Color.Transparent
+            urgent -> Palette.Haldi
+            else -> Palette.InkTint
+        },
+        label = "pipeline-bg",
+    )
+    Box(Modifier.size(width = 40.dp, height = 30.dp).clip(CircleShape).background(bg), contentAlignment = Alignment.Center) {
+        AnimatedContent(targetState = count, transitionSpec = { (fadeIn() + scaleIn(initialScale = 0.6f)) togetherWith fadeOut() }, label = "pipeline-count") { n ->
+            Text(n.toString(), style = LocalFigures.current.medium, color = if (n == 0) Palette.InkFaint else Palette.Ink)
         }
     }
 }

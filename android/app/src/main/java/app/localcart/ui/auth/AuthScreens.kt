@@ -1,5 +1,24 @@
 package app.localcart.ui.auth
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.unit.sp
+import app.localcart.ui.components.AwningEdge
+import app.localcart.ui.components.BrandMark
+import app.localcart.ui.components.pressScale
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -56,7 +75,6 @@ import app.localcart.ui.components.Field
 import app.localcart.ui.components.InlineNotice
 import app.localcart.ui.components.PrimaryButton
 import app.localcart.ui.components.QuietButton
-import app.localcart.ui.theme.LocalFigures
 import app.localcart.ui.theme.Palette
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -96,68 +114,120 @@ class AuthViewModel(private val container: AppContainer) : ViewModel() {
 @Composable
 fun WelcomeScreen(onChooseRole: (String) -> Unit, onSignIn: () -> Unit) {
     var role by rememberSaveable { mutableStateOf<String?>(null) }
+    // One entrance sequence: the board, then the headline, then the choices.
+    var shown by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) { shown = true }
     Column(
-        Modifier.fillMaxSize().background(Palette.Paper).statusBarsPadding().navigationBarsPadding()
-            .verticalScroll(rememberScrollState()).padding(horizontal = 24.dp),
+        Modifier.fillMaxSize().background(Palette.Paper).verticalScroll(rememberScrollState()).navigationBarsPadding(),
     ) {
-        Spacer(Modifier.height(40.dp))
-        Text("LocalCart", style = LocalFigures.current.medium, color = Palette.Leaf)
-        Spacer(Modifier.height(20.dp))
-        Text("Order from the shops on your street, by chat.", style = MaterialTheme.typography.displaySmall)
-        Spacer(Modifier.height(14.dp))
-        Text(
-            "Type or say your list the way you would on WhatsApp. LocalCart turns it into a cart, the shop sends the bill, and you track it to your door.",
-            style = MaterialTheme.typography.bodyLarge,
-            color = Palette.InkMuted,
-        )
-        Spacer(Modifier.height(32.dp))
-        Text("How will you use LocalCart?", style = MaterialTheme.typography.titleMedium)
-        Spacer(Modifier.height(12.dp))
-        RoleOption(
-            title = "I'm ordering",
-            body = "Find open shops nearby and order by chat.",
-            icon = Icons.Outlined.ShoppingBasket,
-            selected = role == "customer",
-            onClick = { role = "customer" },
-        )
-        Spacer(Modifier.height(10.dp))
-        RoleOption(
-            title = "I run a shop",
-            body = "Take orders, send bills and deliver.",
-            icon = Icons.Outlined.Storefront,
-            selected = role == "shopkeeper",
-            onClick = { role = "shopkeeper" },
-        )
-        Spacer(Modifier.height(24.dp))
-        PrimaryButton("Create account", onClick = { role?.let(onChooseRole) }, enabled = role != null, modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-            Text("Already have an account?", style = MaterialTheme.typography.bodyMedium, color = Palette.InkMuted)
-            QuietButton("Sign in", onSignIn)
+        Column(Modifier.fillMaxWidth().background(Palette.Haldi).statusBarsPadding().padding(horizontal = 24.dp)) {
+            Spacer(Modifier.height(28.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                BrandMark(size = 44.dp, tile = true)
+                Spacer(Modifier.width(12.dp))
+                Text("LocalCart", style = MaterialTheme.typography.titleLarge.copy(fontSize = 26.sp))
+            }
+            Spacer(Modifier.height(28.dp))
+            Entrance(shown, delayMillis = 120) {
+                Text(
+                    "Order from the shop on your street, by chat.",
+                    style = MaterialTheme.typography.displaySmall.copy(fontSize = 40.sp, lineHeight = 42.sp),
+                )
+            }
+            Spacer(Modifier.height(12.dp))
+            Entrance(shown, delayMillis = 220) {
+                Text("अपनी गली की दुकान से, चैट पर।", style = MaterialTheme.typography.titleLarge, color = Palette.InkMuted)
+            }
+            Spacer(Modifier.height(16.dp))
+            Entrance(shown, delayMillis = 300) {
+                Text(
+                    "Type or say your list the way you'd text the shop. LocalCart makes the cart, the shop sends the bill, and you track it to your door.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Palette.Ink.copy(alpha = 0.78f),
+                )
+            }
+            Spacer(Modifier.height(24.dp))
         }
-        Spacer(Modifier.height(24.dp))
+        AwningEdge()
+        Column(Modifier.padding(horizontal = 24.dp)) {
+            Spacer(Modifier.height(20.dp))
+            Entrance(shown, delayMillis = 420) {
+                Column {
+                    Text("How will you use LocalCart?", style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(12.dp))
+                    RoleOption(
+                        title = "I'm ordering",
+                        body = "Find open shops nearby and order by chat.",
+                        icon = Icons.Outlined.ShoppingBasket,
+                        selected = role == "customer",
+                        onClick = { role = "customer" },
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    RoleOption(
+                        title = "I run a shop",
+                        body = "Take orders, send bills and deliver.",
+                        icon = Icons.Outlined.Storefront,
+                        selected = role == "shopkeeper",
+                        onClick = { role = "shopkeeper" },
+                    )
+                }
+            }
+            Spacer(Modifier.height(24.dp))
+            PrimaryButton(
+                when (role) {
+                    "customer" -> "Create account to order"
+                    "shopkeeper" -> "Create a shop account"
+                    else -> "Choose one to continue"
+                },
+                onClick = { role?.let(onChooseRole) },
+                enabled = role != null,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                Text("Already have an account?", style = MaterialTheme.typography.bodyMedium, color = Palette.InkMuted)
+                QuietButton("Sign in", onSignIn)
+            }
+            Spacer(Modifier.height(24.dp))
+        }
     }
+}
+
+/** Fades and rises into place once [visible] turns true, after [delayMillis]. */
+@Composable
+private fun Entrance(visible: Boolean, delayMillis: Int, content: @Composable () -> Unit) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(tween(420, delayMillis)) + slideInVertically(tween(480, delayMillis, easing = FastOutSlowInEasing)) { it / 3 },
+    ) { content() }
 }
 
 @Composable
 private fun RoleOption(title: String, body: String, icon: androidx.compose.ui.graphics.vector.ImageVector, selected: Boolean, onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+    val border by animateColorAsState(if (selected) Palette.Ink else Palette.Rule, label = "role-border")
+    val tile by animateColorAsState(if (selected) Palette.Haldi else Palette.InkTint, label = "role-tile")
     Surface(
-        shape = MaterialTheme.shapes.medium,
-        color = if (selected) Palette.LeafTint else Palette.Sheet,
-        border = BorderStroke(if (selected) 2.dp else 1.dp, if (selected) Palette.Leaf else Palette.Rule),
-        modifier = Modifier.fillMaxWidth().selectable(selected = selected, onClick = onClick, role = Role.RadioButton),
+        shape = MaterialTheme.shapes.large,
+        color = Palette.Sheet,
+        border = BorderStroke(if (selected) 2.dp else 1.dp, border),
+        modifier = Modifier.fillMaxWidth().pressScale(interaction, 0.98f)
+            .selectable(selected = selected, onClick = onClick, role = Role.RadioButton, interactionSource = interaction, indication = LocalIndication.current),
     ) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
-                Modifier.size(44.dp).clip(MaterialTheme.shapes.small).background(if (selected) Palette.Leaf else Palette.InkTint),
+                Modifier.size(48.dp).clip(RoundedCornerShape(14.dp)).background(tile),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(icon, contentDescription = null, tint = if (selected) Palette.Paper else Palette.Ink)
+                Icon(icon, contentDescription = null, tint = Palette.Ink)
             }
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.titleMedium)
                 Text(body, style = MaterialTheme.typography.bodyMedium, color = Palette.InkMuted)
+            }
+            AnimatedVisibility(selected, enter = scaleIn() + fadeIn(), exit = scaleOut() + fadeOut()) {
+                Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = Palette.Leaf)
             }
         }
     }

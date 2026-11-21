@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>LocalCart</title>
+  <rect width="64" height="64" rx="14" fill="#16213E"/>
+  <path fill="#F6C445" d="M8 13a3 3 0 0 1 3-3h9v12a6 6 0 0 1-12 0z"/>
+  <path fill="#D2412F" d="M20 10h12v12a6 6 0 0 1-12 0z"/>
+  <path fill="#F6C445" d="M32 10h12v12a6 6 0 0 1-12 0z"/>
+  <path fill="#D2412F" d="M44 10h9a3 3 0 0 1 3 3v9a6 6 0 0 1-12 0z"/>
+  <path fill="#F4F6F3" d="M16 31h32a6 6 0 0 1 6 6v7a6 6 0 0 1-6 6H26l-10 7v-7a6 6 0 0 1-6-6v-7a6 6 0 0 1 6-6z"/>
+  <circle cx="22" cy="40.5" r="3" fill="#16213E"/>
+  <circle cx="32" cy="40.5" r="3" fill="#16213E"/>
+  <circle cx="42" cy="40.5" r="3" fill="#16213E"/>
+</svg>

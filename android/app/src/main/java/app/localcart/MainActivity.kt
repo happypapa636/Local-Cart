@@ -7,6 +7,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import kotlinx.coroutines.flow.MutableStateFlow
 import app.localcart.ui.nav.LocalCartRoot
 import app.localcart.ui.theme.LocalCartTheme
@@ -16,6 +17,7 @@ class MainActivity : ComponentActivity() {
     private val pendingChat = MutableStateFlow<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         // LocalCart is a light-only design: always use dark status and navigation bar icons.
         enableEdgeToEdge(

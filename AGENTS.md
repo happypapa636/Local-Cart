@@ -13,6 +13,7 @@ This file is the working guide for anyone (human or agent) changing the code. Ke
 ```
 localcart/
   server/    Backend API (TypeScript, Hono on Vercel, Drizzle + Neon Postgres, Gemini, Vercel Blob)
+             and the website in server/public/ (landing page, privacy, icons), served by Vercel's CDN
   android/   Native app (Kotlin, Jetpack Compose, Nexconn Android Chat SDK)
   docs/      Screenshots used by the README
 ```
@@ -85,23 +86,35 @@ API when a card is shown, so a missed realtime event can never leave a card wron
 - Money is integer paise everywhere; quantities are decimals in the item's unit.
 - Every Nexconn user id is `NEXCONN_ID_PREFIX` + 22 random alphanumerics.
 - API errors are `{ error: { code, message } }` with messages safe to show to users.
+- Design tokens are shared by the app (`ui/theme/Theme.kt`) and the site (`server/public/styles.css`):
+  haldi #F6C445, ink #16213E, leaf #0E6B4A, chilli #D2412F, paper #F4F6F3; Anek Devanagari for both
+  scripts. Tints are opaque. Haldi is a surface colour (headers, selection), never body text. Brand pieces
+  (mark, awning edge, signboard header, skeletons, press feedback, category tiles) live in
+  `ui/components/Brand.kt`; reuse them rather than restyling screens one by one.
+- Motion answers an action or shows a change (screen transitions, list items, card status, the live
+  delivery step). No decorative loops; the website keeps one orchestrated moment per page.
 - Commits end with the Co-Authored-By trailer; work lands through PRs (squash merge).
 
 ## Folder map
 
 ```
 server/
-  src/index.ts            Hono app (Vercel entrypoint, framework preset "hono" in vercel.json)
+  src/index.ts            Hono app (Vercel entrypoint, framework preset "hono" in vercel.json); / returns
+                          public/home.html because the preset routes / to the function
+  src/release.ts          latest APK (version, URL); drives /download and /api/release
+  public/                 website: home.html, privacy.html, styles.css, site.js, icons, og.png, screens/
   src/dev.ts              local dev server on port 3106
   src/env.ts              validated env (zod)
   src/db/schema.ts        Drizzle schema; migrations in server/drizzle/
-  src/routes/             auth, chat (config, token, chat peers), uploads, shops, catalog, orders + dashboard
+  src/routes/             auth (incl. DELETE /me), chat (config, token, chat peers), uploads, shops, catalog,
+                          orders + dashboard
   src/services/orders.ts  order state machine + card sync (send card, set metadata, update message)
   src/services/cards.ts   card payloads (lcr:cart, lcr:bill, lcr:status) and the metadata snapshot
   src/nexconn/            Platform Chat API client (signed requests) and signature helper
   src/ai/                 Gemini client (retries, fallback model), order parser, catalog list parser
   src/domain/             pure logic: units, pricing, order state, IST hours, geo, UPI links
-  scripts/                migrate, e2e-order-flow (second-phone driver), upload-apk, ai-smoke
+  scripts/                migrate, e2e-order-flow (second-phone driver), upload-apk, ai-smoke,
+                          sync-nexconn-users (register users with a new Nexconn app)
   test/                   vitest: unit tests + full-loop integration test on the real stack
 android/app/src/main/java/app/localcart/
   LocalCartApp.kt, MainActivity.kt
@@ -112,14 +125,16 @@ android/app/src/main/java/app/localcart/
   domain/                 money, quantities, order status rules, formatting, validation
   media/                  VoiceRecorder (AAC), VoicePlayer, ImageFiles, LocationClient
   notify/                 Notifier (in-app banner + local notifications)
-  ui/                     theme, components, nav, auth, customer, shop, chat, orders, account
+  ui/                     theme, components (Components.kt, Brand.kt), nav, auth, customer, shop, chat,
+                          orders, account
 android/app/src/test/     JVM unit tests for domain logic and card decoding
 ```
 
 ## Data model (Postgres)
 
 - `users`: phone (unique), bcrypt hash, name, role (customer or shopkeeper), `nexconn_id` (prefix +
-  random), cached Nexconn token, delivery address and lat/lng.
+  random), cached Nexconn token and the App Key that issued it (a token from another Nexconn app is
+  re-issued), delivery address and lat/lng.
 - `shops`: one per shopkeeper; category, photo, phone, address, lat/lng, delivery radius, IST opening
   hours, open switch, UPI ID, rating sum and count.
 - `catalog_items`: shop, name, unit, price (paise), in stock, photo, archived (soft delete).
@@ -136,7 +151,7 @@ android/app/src/test/     JVM unit tests for domain logic and card decoding
 
 | Feature | Where |
 | --- | --- |
-| SDK init with the Singapore data centre (`AreaCode.SG`), push disabled | `android/.../chat/NexconnChat.kt` `initialize()` |
+| SDK init with the Singapore data centre (`AreaCode.SG`), push disabled; App Key fetched from `/api/config` on every start (cached only for offline), cached chat token dropped when the key changes | `android/.../chat/NexconnChat.kt` `initialize()`, `resolveAppKey()` |
 | Connect with a server-issued token; refresh on 31004, 31020 or `TOKEN_INCORRECT`; reconnect; kicked-offline handling | `NexconnChat.connect()`, `refreshTokenAndReconnect()`, `registerHandlers()`; UI in `ui/nav/LocalCartRoot.kt` and the chat connection strip |
 | Connection status handler | `NexconnChat.registerHandlers()` |
 | Direct channel per customer and shop pair | `DirectChannel(peerId)` throughout `NexconnChat.kt` |
@@ -176,7 +191,8 @@ npm run db:generate          # after schema changes; commit drizzle/
 npm run db:migrate
 vercel deploy --prod
 npx tsx scripts/e2e-order-flow.ts <command>    # drive the second phone in a two-user test
-npx tsx scripts/upload-apk.ts <apk> <version>  # publish the APK to Vercel Blob
+npx tsx scripts/upload-apk.ts <apk> <version>  # publish the APK to Vercel Blob, then update src/release.ts
+npx tsx scripts/sync-nexconn-users.ts --apply   # after changing NEXCONN_APP_KEY: register users in the new app
 
 # android (from android/)
 ./gradlew :app:testDebugUnitTest
@@ -187,6 +203,7 @@ npx tsx scripts/upload-apk.ts <apk> <version>  # publish the APK to Vercel Blob
 
 ## Testing approach
 
+- The site has no build step; check it locally with `npm run dev` (dev.ts serves public/ like Vercel does).
 - Server unit tests cover the pure domain (units, pricing, state machine, IST hours, geo, UPI, ids,
   signatures), parsing helpers and card payloads.
 - `server/test/api.integration.test.ts` runs the whole loop in-process against real Neon, Nexconn and

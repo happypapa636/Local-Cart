@@ -117,6 +117,7 @@ class NexconnChat(
     @Volatile var activePeer: String? = null
 
     @Volatile private var initialized = false
+    @Volatile private var initializedKey: String? = null
     @Volatile private var connectRequested = false
     private var tokenRefreshes = 0
     private var startJob: Job? = null
@@ -129,8 +130,7 @@ class NexconnChat(
         if (startJob?.isActive == true || connectRequested) return
         startJob = scope.launch {
             try {
-                val appKey = session.appKey ?: apiCall { api.config() }.nexconnAppKey.also { session.appKey = it }
-                initialize(appKey)
+                initialize(resolveAppKey())
                 val token = session.cachedChatToken() ?: fetchToken(refresh = false)
                 connect(token)
             } catch (e: Exception) {
@@ -143,8 +143,28 @@ class NexconnChat(
         }
     }
 
+    /**
+     * The App Key from our server, so moving to a new Nexconn app needs no app update. A cached key is
+     * only used offline. When the key changes, the cached chat token belongs to the old app: drop it.
+     */
+    private suspend fun resolveAppKey(): String {
+        val cached = session.appKey
+        val fresh = try {
+            apiCall { api.config() }.nexconnAppKey
+        } catch (e: Exception) {
+            cached ?: throw e
+        }
+        if (fresh != cached) {
+            session.appKey = fresh
+            session.cacheChatToken(null)
+        }
+        // The SDK is initialised once per process; a key change mid-process applies on the next launch.
+        return initializedKey ?: fresh
+    }
+
     private fun initialize(appKey: String) {
         if (initialized) return
+        initializedKey = appKey
         NCEngine.initialize(
             InitParams(context.applicationContext, appKey).apply {
                 areaCode = AreaCode.SG // App Key lives in the Singapore data centre
@@ -161,6 +181,12 @@ class NexconnChat(
 
     private suspend fun fetchToken(refresh: Boolean): String {
         val dto = apiCall { api.chatToken(TokenRequest(refresh)) }
+        if (dto.appKey != initializedKey) {
+            // Issued by a different Nexconn app than the SDK runs with: remember the new key for the next launch.
+            session.appKey = dto.appKey
+            session.cacheChatToken(null)
+            return dto.token
+        }
         session.cacheChatToken(dto.token)
         return dto.token
     }

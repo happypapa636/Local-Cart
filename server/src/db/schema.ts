@@ -24,6 +24,8 @@ export const users = pgTable('users', {
   role: text('role', { enum: ['customer', 'shopkeeper'] }).notNull(),
   nexconnId: text('nexconn_id').notNull().unique(),
   nexconnToken: text('nexconn_token'),
+  // App Key that issued the cached token; a token from another Nexconn app is never handed out.
+  nexconnTokenAppKey: text('nexconn_token_app_key'),
   addressText: text('address_text'),
   lat: doublePrecision('lat'),
   lng: doublePrecision('lng'),

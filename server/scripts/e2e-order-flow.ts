@@ -95,7 +95,7 @@ switch (command) {
       name: 'Sharma Fresh Mart',
       category: 'kirana',
       phone: shop.phone,
-      addressText: 'Test shop for the LocalCart two-user demo',
+      addressText: 'Demo shop, Indiranagar, Bengaluru',
       lat: (lat ?? 12.9716) + 0.004,
       lng: (lng ?? 77.5946) + 0.003,
       deliveryRadiusKm: 5,

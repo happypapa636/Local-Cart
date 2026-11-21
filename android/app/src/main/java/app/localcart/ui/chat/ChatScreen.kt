@@ -1,5 +1,25 @@
 package app.localcart.ui.chat
 
+import app.localcart.ui.orders.OrderProgressBar
+import app.localcart.ui.components.shimmer
+import app.localcart.ui.components.pressScale
+import app.localcart.ui.components.ShopThumb
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.material.icons.outlined.Storefront
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.border
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.AnimatedContent
 import ai.nexconn.chat.message.HDVoiceMessage
 import ai.nexconn.chat.message.ImageMessage
 import ai.nexconn.chat.message.LocationMessage
@@ -154,7 +174,8 @@ fun ChatScreen(container: AppContainer, peerId: String, nav: Nav) {
     }
     // Keep the newest message in view when something new arrives and we're already at the bottom.
     LaunchedEffect(state.messages.firstOrNull()?.key) {
-        if (listState.firstVisibleItemIndex <= 2) listState.animateScrollToItem(0)
+        // Cards are tall, so "at the bottom" allows a few items of slack.
+        if (listState.firstVisibleItemIndex <= 3) listState.animateScrollToItem(0)
     }
 
     var editingOrder by remember { mutableStateOf<OrderDto?>(null) }
@@ -185,31 +206,33 @@ fun ChatScreen(container: AppContainer, peerId: String, nav: Nav) {
         rate = { ratingOrder = it },
     )
 
-    Column(Modifier.fillMaxSize().background(Palette.Paper).statusBarsPadding().imePadding()) {
-        AppTopBar(
-            title = state.peer?.name ?: "Chat",
+    Column(Modifier.fillMaxSize().background(Palette.Paper).imePadding()) {
+        ChatHeader(
+            name = state.peer?.name ?: "Chat",
+            photoUrl = state.peer?.photoUrl,
+            isCustomer = state.peer?.kind == "customer",
             subtitle = when {
-                state.typing -> "typing…"
                 state.peer?.kind == "shop" -> "Shop"
                 state.peer?.kind == "customer" -> "Customer"
-                else -> null
+                else -> ""
             },
+            typing = state.typing,
             onBack = nav::back,
-            actions = {
-                val shopId = state.peer?.shopId
-                if (viewerIsCustomer && shopId != null) QuietButton("Shop", onClick = { nav.shop(shopId) })
-            },
+            onOpenShop = state.peer?.shopId?.takeIf { viewerIsCustomer }?.let { id -> { nav.shop(id) } },
         )
         ConnectionStrip(connection, onRetry = container.chat::reconnect)
         if (state.activeOrders.isNotEmpty()) {
-            Column(Modifier.fillMaxWidth().background(Palette.InkTint)) {
+            Column(Modifier.fillMaxWidth().background(Palette.HaldiTint)) {
                 state.activeOrders.take(2).forEach { o ->
-                    Row(
-                        Modifier.fillMaxWidth().clickable { nav.order(o.id) }.padding(horizontal = 16.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text("Order #${o.code}", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-                        StatusTag(OrderStatus.label(o.status), statusTone(o.status))
+                    Column(Modifier.fillMaxWidth().clickable(onClickLabel = "Open order") { nav.order(o.id) }.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Order #${o.code}", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                            StatusTag(OrderStatus.label(o.status), statusTone(o.status))
+                        }
+                        if (o.status != OrderStatus.DRAFT) {
+                            Spacer(Modifier.height(6.dp))
+                            OrderProgressBar(o.status)
+                        }
                     }
                 }
             }
@@ -228,7 +251,7 @@ fun ChatScreen(container: AppContainer, peerId: String, nav: Nav) {
                 modifier = Modifier.fillMaxSize(),
             ) {
                 items(state.messages, key = { it.key }) { ui ->
-                    MessageRow(
+                    Box(Modifier.animateItem()) { MessageRow(
                         ui = ui,
                         read = ui.message.messageId?.let { it in state.readIds } == true,
                         orders = orders,
@@ -241,7 +264,7 @@ fun ChatScreen(container: AppContainer, peerId: String, nav: Nav) {
                         onMakeCart = { vm.makeCart(ui) },
                         onRetry = { vm.resend(ui) },
                         onOpenUrl = { url -> runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) } },
-                    )
+                    ) }
                 }
                 if (state.loadingMore) item { LoadingState(label = "Loading older messages") }
             }
@@ -257,10 +280,15 @@ fun ChatScreen(container: AppContainer, peerId: String, nav: Nav) {
             )
         }
         if (state.makingCartFor != null) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = Palette.Leaf)
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp).clip(RoundedCornerShape(12.dp))
+                    .background(Palette.HaldiTint).shimmer().padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Outlined.AutoAwesome, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(10.dp))
-                Text("Reading your list and matching it to the shop's catalog", style = MaterialTheme.typography.bodySmall)
+                Text("Reading your list and matching it to the shop's catalog", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                TypingDots()
             }
         }
         Composer(
@@ -367,10 +395,11 @@ private fun MessageRow(
     }
     val mine = ui.mine
     Column(Modifier.fillMaxWidth(), horizontalAlignment = if (mine) Alignment.End else Alignment.Start) {
-        val shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = if (mine) 16.dp else 4.dp, bottomEnd = if (mine) 4.dp else 16.dp)
+        val shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = if (mine) 18.dp else 6.dp, bottomEnd = if (mine) 6.dp else 18.dp)
         Box(
             Modifier.widthIn(max = 300.dp).clip(shape)
                 .background(if (mine) Palette.Ink else Palette.Sheet)
+                .then(if (mine) Modifier else Modifier.border(1.dp, Palette.Rule, shape))
                 .then(if (ui.failure != null) Modifier.clickable(onClick = onRetry) else Modifier)
                 .padding(if (content is ImageMessage) 4.dp else 12.dp),
         ) {
@@ -431,15 +460,17 @@ private fun MessageRow(
             }
         }
         if (canMakeCart) {
+            val interaction = remember { MutableInteractionSource() }
             Row(
-                Modifier.clip(RoundedCornerShape(6.dp)).clickable(enabled = !makingCart, onClick = onMakeCart)
-                    .background(Palette.LeafTint).padding(horizontal = 10.dp, vertical = 6.dp),
+                Modifier.padding(top = 2.dp).pressScale(interaction, 0.94f).clip(CircleShape)
+                    .clickable(interactionSource = interaction, indication = LocalIndication.current, enabled = !makingCart, onClick = onMakeCart)
+                    .background(Palette.Haldi).then(if (makingCart) Modifier.shimmer() else Modifier)
+                    .padding(start = 12.dp, end = 14.dp, top = 8.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (makingCart) CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp, color = Palette.Leaf)
-                else Icon(Icons.Outlined.ShoppingBasket, contentDescription = null, tint = Palette.Leaf, modifier = Modifier.size(16.dp))
+                Icon(Icons.Outlined.AutoAwesome, contentDescription = null, tint = Palette.Ink, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
-                Text(if (makingCart) "Making cart" else "Make cart", style = MaterialTheme.typography.labelLarge, color = Palette.Leaf)
+                Text(if (makingCart) "Making cart" else "Make cart", style = MaterialTheme.typography.labelLarge, color = Palette.Ink)
             }
         }
     }
@@ -550,6 +581,70 @@ private fun Composer(vm: ChatViewModel, draft: String, recording: Boolean, recor
                 }
                 IconButton(onClick = { vm.sendText() }) { Icon(Icons.AutoMirrored.Outlined.Send, contentDescription = "Send", tint = Palette.Leaf) }
             }
+        }
+    }
+}
+
+
+/** Back, the peer's photo and name, and "typing…" when they are composing (Nexconn typing status). */
+@Composable
+private fun ChatHeader(
+    name: String,
+    photoUrl: String?,
+    isCustomer: Boolean,
+    subtitle: String,
+    typing: Boolean,
+    onBack: () -> Unit,
+    onOpenShop: (() -> Unit)?,
+) {
+    Row(
+        Modifier.fillMaxWidth().background(Palette.Sheet).statusBarsPadding().padding(start = 4.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back") }
+        if (isCustomer) Thumb(photoUrl, name, size = 40.dp, round = true) else ShopThumb(photoUrl, null, size = 40.dp)
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.semantics { heading() })
+            AnimatedContent(targetState = typing, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "typing") { isTyping ->
+                if (isTyping) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("typing", style = MaterialTheme.typography.bodySmall, color = Palette.Leaf)
+                        Spacer(Modifier.width(4.dp))
+                        TypingDots(color = Palette.Leaf, dot = 4.dp)
+                    }
+                } else {
+                    Text(subtitle, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+        if (onOpenShop != null) {
+            IconButton(onClick = onOpenShop) { Icon(Icons.Outlined.Storefront, contentDescription = "Shop page") }
+        }
+    }
+    Box(Modifier.fillMaxWidth().height(1.dp).background(Palette.Rule))
+}
+
+/** Three dots rising in turn, for "typing" and "working on it". */
+@Composable
+private fun TypingDots(color: androidx.compose.ui.graphics.Color = Palette.Ink, dot: androidx.compose.ui.unit.Dp = 6.dp) {
+    val transition = rememberInfiniteTransition(label = "dots")
+    Row(horizontalArrangement = Arrangement.spacedBy(dot * 0.6f), verticalAlignment = Alignment.CenterVertically) {
+        repeat(3) { i ->
+            val lift by transition.animateFloat(
+                initialValue = 0f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    keyframes {
+                        durationMillis = 1100
+                        0f at 0 + i * 140
+                        1f at 220 + i * 140
+                        0f at 440 + i * 140
+                    },
+                ),
+                label = "dot-$i",
+            )
+            Box(Modifier.size(dot).graphicsLayer { translationY = -lift * dot.toPx() * 0.8f; alpha = 0.45f + lift * 0.55f }.clip(CircleShape).background(color))
         }
     }
 }
