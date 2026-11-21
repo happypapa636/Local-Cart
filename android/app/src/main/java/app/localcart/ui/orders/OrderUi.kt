@@ -320,7 +320,7 @@ fun RateDialog(shopName: String, onDismiss: () -> Unit, onSubmit: (Int, String?)
                             Icon(
                                 if (i <= stars) Icons.Filled.Star else Icons.Outlined.StarOutline,
                                 contentDescription = "$i star${if (i > 1) "s" else ""}",
-                                tint = if (i <= stars) Palette.Leaf else Palette.InkFaint,
+                                tint = if (i <= stars) Palette.HaldiDeep else Palette.InkFaint,
                             )
                         }
                     }
