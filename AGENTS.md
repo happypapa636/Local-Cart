@@ -15,7 +15,7 @@ localcart/
   server/    Backend API (TypeScript, Hono on Vercel, Drizzle + Neon Postgres, Gemini, Vercel Blob)
              and the website in server/public/ (landing page, privacy, icons), served by Vercel's CDN
   android/   Native app (Kotlin, Jetpack Compose, Nexconn Android Chat SDK)
-  docs/      Screenshots used by the README
+  docs/      App screenshots from the 1.1.0 build (the website uses copies in server/public/screens)
 ```
 
 ## User journeys
@@ -93,7 +93,8 @@ API when a card is shown, so a missed realtime event can never leave a card wron
   `ui/components/Brand.kt`; reuse them rather than restyling screens one by one.
 - Motion answers an action or shows a change (screen transitions, list items, card status, the live
   delivery step). No decorative loops; the website keeps one orchestrated moment per page.
-- Commits end with the Co-Authored-By trailer; work lands through PRs (squash merge).
+- Commits end with the Co-Authored-By trailer; work lands through PRs merged with a merge commit
+  (not squashed), so each focused commit stays in the history.
 
 ## Folder map
 

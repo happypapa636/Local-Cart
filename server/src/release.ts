@@ -12,4 +12,4 @@ export const LATEST_RELEASE = {
 } as const;
 
 /** The narrated demo of a full order, on the website and in the README. */
-export const DEMO_VIDEO_URL = 'https://8eiqfkaqqyue5xri.public.blob.vercel-storage.com/localcart/demo/LocalCart-demo-1.1.1.mp4';
+export const DEMO_VIDEO_URL = 'https://8eiqfkaqqyue5xri.public.blob.vercel-storage.com/localcart/demo/LocalCart-demo-1.1.1-final.mp4';
