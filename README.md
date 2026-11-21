@@ -38,24 +38,6 @@ from its own side of the app, and the order card moves to delivered on both side
 how Nexconn carries each step. The file is also attached to the
 [v1.1.1 release](https://github.com/happypapa636/Local-Cart/releases/tag/v1.1.1).
 
-## Screens
-
-Real screens from the signed 1.1.0 release build on an Android 16 emulator, against the production
-backend. The shop side of each order was driven through the same API by
-[`scripts/e2e-order-flow.ts`](server/scripts/e2e-order-flow.ts).
-
-| Pick a side | Shops near you | A shop's catalog |
-| --- | --- | --- |
-| ![Welcome screen](docs/01-welcome.png) | ![Nearby shops](docs/02-discover.png) | ![Shop page](docs/03-shop.png) |
-
-| Cart from a Hinglish message | The shop's bill arrives | Order card, live |
-| --- | --- | --- |
-| ![AI cart card](docs/04-ai-cart.png) | ![Bill card](docs/05-bill.png) | ![Status card: out for delivery](docs/06-live-status.png) |
-
-| Delivered and rated |
-| --- |
-| ![Delivered and rated](docs/07-delivered-rated.png) |
-
 ## How an order works
 
 1. **Send your list the way you'd text the shop.** Type it, or hold the mic and say it. Hindi, English or
